@@ -7,6 +7,6 @@ git submodule update --init --recursive
 
 git add .gitmodules assets-shared
 
-git commit -m "Added shared assets as a submodule"`
+git commit -m "Added shared assets as a submodule"
 
 ```
