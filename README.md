@@ -1,4 +1,4 @@
-*Run this in the Terminal in the Project*
+**Run this in the Terminal in the Project**
 
 git submodule add https://github.com/redrogue/Marla-assets-shared.git assets-shared
 
