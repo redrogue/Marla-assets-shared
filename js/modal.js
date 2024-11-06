@@ -1,4 +1,7 @@
 
+console.log("Modal js loaded");
+
+
 function openModal(modalId) {
     // Close any currently open modals
     var modals = document.getElementsByClassName('modalWindow');
