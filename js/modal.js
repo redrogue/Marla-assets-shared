@@ -1,6 +1,6 @@
 
-console.log("Modal js loaded");
-
+// Ensure the file runs as expected in a module context
+console.log("modal.js loaded");
 
 function openModal(modalId) {
     // Close any currently open modals
@@ -12,13 +12,16 @@ function openModal(modalId) {
     // Open the requested modal
     document.getElementById(modalId).style.display = "block";
     document.body.classList.add('overflow-hidden'); // Prevent scrolling on body
-
 }
 
 function closeModal(modalId) {
     document.getElementById(modalId).style.display = "none";
     document.body.classList.remove('overflow-hidden'); // Re-enable scrolling on body
 }
+
+// Attach functions to window object to make them accessible globally
+window.openModal = openModal;
+window.closeModal = closeModal;
 
 // Optional: Close modals if the user clicks anywhere outside of the modal content
 window.onclick = function (event) {
