@@ -20,11 +20,14 @@ If you need to move the folder location of the project run this
 
 
 ```
-git submodule deinit -f [current folder location] // NB you will prob get a {y/n) question - Answer:n
+// NB you will prob get a {y/n) question - Answer:n
+git submodule deinit -f [current folder location]
 
-rm -rf .git/modules/assets-shared // run anyway - will prob error
+// run anyway - will prob error
+rm -rf .git/modules/assets-shared
 
-rm -rf [current folder location]  // run anyway - will prob error
+// run anyway - will prob error
+rm -rf [current folder location]
 
 git submodule add https://github.com/redrogue/Marla-assets-shared.git [new folder location]
 
