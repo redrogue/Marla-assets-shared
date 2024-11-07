@@ -1,4 +1,4 @@
-#Run this in the Terminal in the Project
+# Run this in the Terminal in the Project
 
 This will create the folders
 
@@ -14,7 +14,7 @@ git commit -m "Added shared assets as a submodule"
 ```
 
 
-##Moving location of folder in Project
+## Moving location of folder in Project
 
 If you need to move the folder location of the project run this
 
