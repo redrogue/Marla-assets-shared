@@ -64,12 +64,12 @@
       @apply  pt-3 pb-4 md:pt-2 md:pb-3 px-6 text-white leading-6 text-sm; /*removed  bg-red-700 AND border-red-700 AND hover:text-red-300 */
       background-color: var(--primary-bg);
   }
-  #scrollSpyNav-1 a:hover {color: var(--primary-text-highlight)}
+  #scrollSpyNav-1 a:hover {color: var(--primary-highlight)}
   
   #scrollSpyNav-1 a.scrollSpyActive {
        /*text-red-200 AND bg-red-700 */
-      color: var(--primary-text-highlight);
-      background-color: var(--primary-bg-lowlight);
+      color: var(--primary-highlight);
+      background-color: var(--primary-lowlight);
       }
 
 
