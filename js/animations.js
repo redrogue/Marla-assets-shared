@@ -164,7 +164,7 @@ function startAnimeUp(target) {
     });
 
     upAnimation.play();
-}
+} 
 
 // Create an Intersection Observer
 var observerAnime = new IntersectionObserver(function (entries, observer) {
@@ -205,7 +205,7 @@ function observeDynamicAnimeElements() {
 window.observeDynamicAnimeElements = observeDynamicAnimeElements;
 
 // Debugging
-console.log("observeDynamicAnimeElements is now globally available:", typeof window.observeDynamicAnimeElements);
+// console.log("observeDynamicAnimeElements is now globally available:", typeof window.observeDynamicAnimeElements);
 
 ////////////////////////////////////////////////////////////////
 
