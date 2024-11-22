@@ -1,6 +1,26 @@
-// console.log("animations.js loaded");
+console.log("animations.js loaded");
 
 
+// Create an Intersection Observer for anime-fade elements
+var observerAnime = new IntersectionObserver(function (entries, observer) {
+    entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+            var animationType = entry.target.getAttribute('anime-fade');
+            if (animationType === 'left') {
+                startAnimeLeft(entry.target);
+            } else if (animationType === 'right') {
+                startAnimeRight(entry.target);
+            } else if (animationType === 'up') {
+                startAnimeUp(entry.target);
+            } else if (animationType === 'down') {
+                startAnimeDown(entry.target);
+            }
+
+            // Stop observing the element once it's animated
+            observer.unobserve(entry.target);
+        }
+    });
+});
 ////////////////////////////////////////////////////////////////////////
 
 ////////////// Animations  //////////////////////////////////////////////
@@ -166,13 +186,26 @@ var observerAnime = new IntersectionObserver(function (entries, observer) {
     });
 });
 
-// Find the elements with the "anime-fade" attribute and start observing them
+
+// Observe elements with the "anime-fade" attribute already in the DOM
 const animeTargetElements = document.querySelectorAll('[anime-fade]');
+animeTargetElements.forEach((tag) => observerAnime.observe(tag));
 
-animeTargetElements.forEach((tag) => {
-    observerAnime.observe(tag);
-});
+// Function to observe dynamically added elements
+function observeDynamicAnimeElements() {
+    const newAnimeElements = document.querySelectorAll('[anime-fade]:not([data-observed])');
+    newAnimeElements.forEach((element) => {
+        observerAnime.observe(element);
+        element.setAttribute('data-observed', 'true'); // Mark as observed
+        console.log('Observed new element:', element); // Debugging
+    });
+}
 
+// Expose observeDynamicAnimeElements globally
+window.observeDynamicAnimeElements = observeDynamicAnimeElements;
+
+// Debugging
+console.log("observeDynamicAnimeElements is now globally available:", typeof window.observeDynamicAnimeElements);
 
 ////////////////////////////////////////////////////////////////
 
