@@ -1,6 +1,6 @@
 console.log("animations.js load");
 
-// Create an Intersection Observer for anime-fade elements
+/// Create an Intersection Observer for anime-fade elements
 var observerAnime = new IntersectionObserver(function (entries, observer) {
     entries.forEach(function (entry) {
         if (entry.isIntersecting) {
