@@ -22,6 +22,26 @@ var observerAnime = new IntersectionObserver(function (entries, observer) {
 });
 
 
+// Create an Intersection Observer for anime-fade elements
+var observerAnime = new IntersectionObserver(function (entries, observer) {
+    entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+            var animationType = entry.target.getAttribute('anime-fade');
+            if (animationType === 'left') {
+                startAnimeLeft(entry.target);
+            } else if (animationType === 'right') {
+                startAnimeRight(entry.target);
+            } else if (animationType === 'up') {
+                startAnimeUp(entry.target);
+            } else if (animationType === 'down') {
+                startAnimeDown(entry.target);
+            }
+
+            // Stop observing the element once it's animated
+            observer.unobserve(entry.target);
+        }
+    });
+});
 ////////////////////////////////////////////////////////////////////////
 
 ////////////// Animations  //////////////////////////////////////////////
@@ -165,7 +185,7 @@ function startAnimeUp(target) {
     });
 
     upAnimation.play();
-}
+} 
 
 // Create an Intersection Observer
 var observerAnime = new IntersectionObserver(function (entries, observer) {
