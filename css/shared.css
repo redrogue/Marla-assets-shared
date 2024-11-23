@@ -205,12 +205,12 @@
 @keyframes expandFromTopRight {
   from {
       transform: scale(0);
-      transform-origin: top right;
+      transform-origin: top ;
   }
 
   to {
       transform: scale(1);
-      transform-origin: top right;
+      transform-origin: top ;
   }
 }
 
