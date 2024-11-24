@@ -48,6 +48,11 @@ window.observeDynamicAnimeElements = observeDynamicAnimeElements;
  * Prepare element for animation by removing `hidden-opacity` class.
  */
 function prepareForAnimation(element) {
+    if (!element) {
+        console.warn("prepareForAnimation: Element is null or undefined, skipping animation.");
+        return; // Exit the function early if the element doesn't exist
+    }
+
     console.log("Preparing for animation:", element); // Debugging
     element.style.opacity = "1"; // Explicitly set opacity
     element.style.visibility = "visible"; // Make it visible
@@ -60,6 +65,11 @@ function prepareForAnimation(element) {
  */
 function wrapTextWithSpans(selector) {
     const elements = document.querySelectorAll(selector);
+    if (elements.length === 0) {
+        console.warn(`No elements found for selector ${selector}.`);
+        return;
+    }
+
     elements.forEach(el => {
         if (!el.textContent.trim()) {
             console.error("Empty or invalid element:", el);
@@ -74,10 +84,33 @@ function wrapTextWithSpans(selector) {
 ////////////////////////////////////////////////////////////////////////
 
 /**
+ * Animation for animeNavItem.
+ */
+const navItems = document.querySelectorAll('.animeNavItem');
+if (navItems.length > 0) {
+    navItems.forEach(navItem => prepareForAnimation(navItem)); // Ensure visibility
+
+    anime({
+        targets: '.animeNavItem',
+        translateY: [-5, 0],
+        opacity: [0, 1],
+        duration: 500,
+        delay: (el, i) => 500 + 30 * i,
+    });
+} else {
+    console.warn("No .animeNavItem elements found on this page.");
+}
+
+/**
  * Animation for animeHeading.
  */
 function animateHeadingLetters() {
     const textWrappers = document.querySelectorAll('.animeHeading');
+    if (textWrappers.length === 0) {
+        console.warn("No .animeHeading elements found on this page.");
+        return;
+    }
+
     textWrappers.forEach(textWrapper => {
         prepareForAnimation(textWrapper);
 
@@ -97,52 +130,58 @@ function animateHeadingLetters() {
 /**
  * Animation for animeSlideHeading.
  */
-anime.timeline({ loop: false })
-    .add({
-        targets: '.animeSlideHeading',
-        translateX: [40, 0],
-        opacity: [0, 1],
-        easing: "easeOutExpo",
-        duration: 2000,
-        delay: 500,
-        begin: () => {
-            const element = document.querySelector('.animeSlideHeading');
-            prepareForAnimation(element);
-        },
-    });
+const slideHeading = document.querySelector('.animeSlideHeading');
+if (slideHeading) {
+    anime.timeline({ loop: false })
+        .add({
+            targets: '.animeSlideHeading',
+            translateX: [40, 0],
+            opacity: [0, 1],
+            easing: "easeOutExpo",
+            duration: 2000,
+            delay: 500,
+            begin: () => prepareForAnimation(slideHeading),
+        });
+} else {
+    console.warn(".animeSlideHeading not found on this page, skipping animation.");
+}
 
 /**
  * Animation for animeLogo.
  */
-anime({
-    targets: '.animeLogo',
-    translateX: [40, 0],
-    opacity: [0, 1],
-    easing: "easeOutExpo",
-    duration: 1000,
-    delay: (el, i) => 500 + 30 * i,
-    begin: () => {
-        const element = document.querySelector('.animeLogo');
-        prepareForAnimation(element);
-    },
-});
+const logo = document.querySelector('.animeLogo');
+if (logo) {
+    anime({
+        targets: '.animeLogo',
+        translateX: [40, 0],
+        opacity: [0, 1],
+        easing: "easeOutExpo",
+        duration: 1000,
+        delay: (el, i) => 500 + 30 * i,
+        begin: () => prepareForAnimation(logo),
+    });
+} else {
+    console.warn(".animeLogo not found on this page, skipping animation.");
+}
 
 /**
  * Animation for animeHeadingImage.
  */
-anime.timeline({ loop: false })
-    .add({
-        targets: '.animeHeadingImage',
-        translateX: [-40, 0],
-        opacity: [0, 1],
-        easing: "easeOutExpo",
-        duration: 2000,
-        delay: 500,
-        begin: () => {
-            const element = document.querySelector('.animeHeadingImage');
-            prepareForAnimation(element);
-        },
-    });
+const headingImage = document.querySelector('.animeHeadingImage');
+if (headingImage) {
+    anime.timeline({ loop: false })
+        .add({
+            targets: '.animeHeadingImage',
+            translateX: [-40, 0],
+            opacity: [0, 1],
+            easing: "easeOutExpo",
+            duration: 2000,
+            delay: 500,
+            begin: () => prepareForAnimation(headingImage),
+        });
+} else {
+    console.warn(".animeHeadingImage not found on this page, skipping animation.");
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Direction-Specific Animations
@@ -198,42 +237,6 @@ function startAnimeDown(target) {
         easing: 'easeInOutSine',
         delay: parseInt(target.getAttribute('anime-delay')) || 0,
     });
-}
-
-////////////////////////////////////////////////////////////////////////
-// Extra Animations (Restored)
-////////////////////////////////////////////////////////////////////////
-
-/**
- * Animation for animeNavItem.
- */
-anime({
-    targets: '.animeNavItem',
-    translateY: [-5, 0],
-    opacity: [0, 1],
-    duration: 500,
-    delay: (el, i) => 500 + 30 * i,
-});
-
-/**
- * Custom Animation Timeline (if required for scroll progress).
- */
-function createAnimeTimeline(animationProperties, triggerElement) {
-    const animeTimeline = anime.timeline({ autoplay: false });
-
-    animationProperties.forEach(props => animeTimeline.add(props));
-
-    const scrollObserver = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animeTimeline.seek(0); // Start animation at 0% progress
-                scrollObserver.unobserve(entry.target);
-            }
-        });
-    });
-
-    const targetElement = document.querySelector(triggerElement);
-    if (targetElement) scrollObserver.observe(targetElement);
 }
 
 ////////////////////////////////////////////////////////////////////////
