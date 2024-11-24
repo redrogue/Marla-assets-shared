@@ -205,7 +205,7 @@
 @keyframes expandFromTopRight {
   from {
       transform: scale(0);
-      transform-origin: top right;
+      transform-origin: top ;
   }
 
   to {

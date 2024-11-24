@@ -1,310 +1,249 @@
-console.log("animations.js load");
+console.log("animations.js loaded");
 
-/// Create an Intersection Observer for anime-fade elements
-var observerAnime = new IntersectionObserver(function (entries, observer) {
-    entries.forEach(function (entry) {
+////////////////////////////////////////////////////////////////////////
+// Intersection Observer
+////////////////////////////////////////////////////////////////////////
+
+// General Intersection Observer for anime-fade elements
+const observerAnime = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
         if (entry.isIntersecting) {
-            var animationType = entry.target.getAttribute('anime-fade');
-            if (animationType === 'left') {
-                startAnimeLeft(entry.target);
-            } else if (animationType === 'right') {
-                startAnimeRight(entry.target);
-            } else if (animationType === 'up') {
-                startAnimeUp(entry.target);
-            } else if (animationType === 'down') {
-                startAnimeDown(entry.target);
+            const animationType = entry.target.getAttribute('anime-fade');
+            switch (animationType) {
+                case 'left':
+                    startAnimeLeft(entry.target);
+                    break;
+                case 'right':
+                    startAnimeRight(entry.target);
+                    break;
+                case 'up':
+                    startAnimeUp(entry.target);
+                    break;
+                case 'down':
+                    startAnimeDown(entry.target);
+                    break;
             }
-
-            // Stop observing the element once it's animated
-            observer.unobserve(entry.target);
+            observer.unobserve(entry.target); // Stop observing once triggered
         }
     });
 });
 
+// Observe all elements with the anime-fade attribute
+document.querySelectorAll('[anime-fade]').forEach(el => observerAnime.observe(el));
 
-// Create an Intersection Observer for anime-fade elements
-var observerAnime = new IntersectionObserver(function (entries, observer) {
-    entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-            var animationType = entry.target.getAttribute('anime-fade');
-            if (animationType === 'left') {
-                startAnimeLeft(entry.target);
-            } else if (animationType === 'right') {
-                startAnimeRight(entry.target);
-            } else if (animationType === 'up') {
-                startAnimeUp(entry.target);
-            } else if (animationType === 'down') {
-                startAnimeDown(entry.target);
-            }
+// Dynamically added elements
+function observeDynamicAnimeElements() {
+    document.querySelectorAll('[anime-fade]:not([data-observed])').forEach(element => {
+        observerAnime.observe(element);
+        element.setAttribute('data-observed', 'true'); // Mark as observed
+    });
+}
+window.observeDynamicAnimeElements = observeDynamicAnimeElements;
 
-            // Stop observing the element once it's animated
-            observer.unobserve(entry.target);
+////////////////////////////////////////////////////////////////////////
+// Utility Functions
+////////////////////////////////////////////////////////////////////////
+
+/**
+ * Prepare element for animation by removing `hidden-opacity` class.
+ */
+function prepareForAnimation(element) {
+    console.log("Preparing for animation:", element); // Debugging
+    element.style.opacity = "1"; // Explicitly set opacity
+    element.style.visibility = "visible"; // Make it visible
+    element.style.transform = "none"; // Reset any transform if required
+    element.classList.remove('hidden-opacity'); // Remove hidden-opacity class
+}
+
+/**
+ * Wrap text in spans for animeHeading animations.
+ */
+function wrapTextWithSpans(selector) {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach(el => {
+        if (!el.textContent.trim()) {
+            console.error("Empty or invalid element:", el);
+            return;
         }
-    });
-});
-////////////////////////////////////////////////////////////////////////
-
-////////////// Animations  //////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////
-
-/////////////////----------- Timeline ------------//////////////////////
-
-
-// Function to create an anime timeline with custom properties
-function createAnimeTimeline(animationProperties, triggerElement) {
-    // Creates anime timeline.
-    var animeTimeline = anime.timeline({ autoplay: false });
-
-    // Adds transitions to the timeline with the provided properties
-    animationProperties.forEach(function (props) {
-        animeTimeline.add(props);
-    });
-
-    // Function to start the animation
-    function startAnimeTimeline(scrollProgress) {
-        // Calculate the seek position based on the scroll progress
-        var animationProgress = animeTimeline.duration * scrollProgress;
-        animeTimeline.seek(animationProgress);
-    }
-
-    // Intersection Observer callback
-    function handleIntersection(entries, observer) {
-        entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-                // The target element is now visible, so start the animation
-                startAnimeTimeline(0); // Start animation at 0% progress
-
-                // Unobserve the element to stop observing once triggered
-                observer.unobserve(entry.target);
-            }
-        });
-    }
-
-    // Create an Intersection Observer
-    var scrollObserver = new IntersectionObserver(handleIntersection, {
-        root: null, // Use the viewport as the root
-        threshold: 0.5, // Trigger when 50% of the element is visible
-    });
-
-    // Find the element you want to observe and start observing it
-    var theTargetElement = document.querySelector(triggerElement);
-    if (theTargetElement) {
-        scrollObserver.observe(theTargetElement);
-    }
-
-    // Event listener for scroll (optional)
-    window.addEventListener("scroll", () => {
-        const currentScroll = window.scrollY;
-        const maxScroll =
-            document.documentElement.scrollHeight - window.innerHeight;
-
-        // Calculate the scroll progress as a value between 0 and 1
-        const scrollProgress = currentScroll / maxScroll;
-
-        console.log('Scroll Progress:', scrollProgress);
-
-        // Start the animation based on the scroll progress
-        startAnimeTimeline(scrollProgress);
+        el.innerHTML = el.textContent.replace(/\S/g, "<span class='animeLetter'>$&</span>");
     });
 }
 
-////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// Specific Animations
+////////////////////////////////////////////////////////////////////////
 
-////// ---------- Fade up/right/left in Viewport -------- //////
+/**
+ * Animation for animeHeading.
+ */
+function animateHeadingLetters() {
+    const textWrappers = document.querySelectorAll('.animeHeading');
+    textWrappers.forEach(textWrapper => {
+        prepareForAnimation(textWrapper);
 
-////////////////////////////////////////////////////////////////
+        anime.timeline({ loop: false })
+            .add({
+                targets: textWrapper.querySelectorAll('.animeLetter'),
+                translateX: [40, 0],
+                translateZ: [500, 0],
+                opacity: [0, 1],
+                easing: "easeOutExpo",
+                duration: 2000,
+                delay: (el, i) => 500 + 30 * i,
+            });
+    });
+}
 
-
-// Function to start the animation
-function startAnimeDown(target) {
-    var getDelay = parseInt(target.getAttribute('anime-delay')) || 0;
-
-    var downAnimation = anime({
-        targets: target,
-        translateY: [-100, 0], // Moving from -100 to 0 on Y-axis
+/**
+ * Animation for animeSlideHeading.
+ */
+anime.timeline({ loop: false })
+    .add({
+        targets: '.animeSlideHeading',
+        translateX: [40, 0],
         opacity: [0, 1],
-        duration: 1000,
-        elasticity: 200,
-        easing: 'easeInOutSine',
-        delay: getDelay, // Delay based on the anime-delay attribute
-        autoplay: false // Set autoplay to false so it doesn’t start immediately
+        easing: "easeOutExpo",
+        duration: 2000,
+        delay: 500,
+        begin: () => {
+            const element = document.querySelector('.animeSlideHeading');
+            prepareForAnimation(element);
+        },
     });
 
-    downAnimation.play();
-}
+/**
+ * Animation for animeLogo.
+ */
+anime({
+    targets: '.animeLogo',
+    translateX: [40, 0],
+    opacity: [0, 1],
+    easing: "easeOutExpo",
+    duration: 1000,
+    delay: (el, i) => 500 + 30 * i,
+    begin: () => {
+        const element = document.querySelector('.animeLogo');
+        prepareForAnimation(element);
+    },
+});
+
+/**
+ * Animation for animeHeadingImage.
+ */
+anime.timeline({ loop: false })
+    .add({
+        targets: '.animeHeadingImage',
+        translateX: [-40, 0],
+        opacity: [0, 1],
+        easing: "easeOutExpo",
+        duration: 2000,
+        delay: 500,
+        begin: () => {
+            const element = document.querySelector('.animeHeadingImage');
+            prepareForAnimation(element);
+        },
+    });
+
+////////////////////////////////////////////////////////////////////////
+// Direction-Specific Animations
+////////////////////////////////////////////////////////////////////////
 
 function startAnimeLeft(target) {
-    var getDelay = parseInt(target.getAttribute('anime-delay')) || 0;
+    prepareForAnimation(target);
 
-    var leftAnimation = anime({
+    anime({
         targets: target,
         translateX: [100, 0],
         opacity: [0, 1],
         duration: 1000,
-        elasticity: 200,
         easing: 'easeInOutSine',
-        delay: getDelay, // Set delay based on anime-delay attribute
-        autoplay: false // Set autoplay to false so it doesn't start immediately
+        delay: parseInt(target.getAttribute('anime-delay')) || 0,
     });
-
-    leftAnimation.play();
 }
 
-// Function to start the animation for "right" elements
 function startAnimeRight(target) {
-    var getDelay = parseInt(target.getAttribute('anime-delay')) || 0;
+    prepareForAnimation(target);
 
-    var rightAnimation = anime({
+    anime({
         targets: target,
         translateX: [-100, 0],
         opacity: [0, 1],
         duration: 1000,
-        elasticity: 200,
         easing: 'easeInOutSine',
-        delay: getDelay, // Set delay based on anime-delay attribute
-        autoplay: false // Set autoplay to false so it doesn't start immediately
+        delay: parseInt(target.getAttribute('anime-delay')) || 0,
     });
-
-    rightAnimation.play();
 }
 
-// Function to start the animation for "up" elements
 function startAnimeUp(target) {
-    var getDelay = parseInt(target.getAttribute('anime-delay')) || 0;
+    prepareForAnimation(target);
 
-    var upAnimation = anime({
+    anime({
         targets: target,
         translateY: [100, 0],
         opacity: [0, 1],
         duration: 1000,
-        elasticity: 200,
         easing: 'easeInOutSine',
-        delay: getDelay, // Set delay based on anime-delay attribute
-        autoplay: false // Set autoplay to false so it doesn't start immediately
-    });
-
-    upAnimation.play();
-} 
-
-// Create an Intersection Observer
-var observerAnime = new IntersectionObserver(function (entries, observer) {
-    entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-            // Determine the animation type based on the "anime-fade" attribute
-            var animationType = entry.target.getAttribute('anime-fade');
-            if (animationType === 'left') {
-                startAnimeLeft(entry.target);
-            } else if (animationType === 'right') {
-                startAnimeRight(entry.target);
-            } else if (animationType === 'up') {
-                startAnimeUp(entry.target);
-            }
-
-            // Unobserve the element to stop observing once triggered
-            observer.unobserve(entry.target);
-        }
-    });
-});
-
-// Observe elements with the "anime-fade" attribute already in the DOM
-const animeTargetElements = document.querySelectorAll('[anime-fade]');
-animeTargetElements.forEach((tag) => observerAnime.observe(tag));
-
-// Function to observe dynamically added elements
-function observeDynamicAnimeElements() {
-    const newAnimeElements = document.querySelectorAll('[anime-fade]:not([data-observed])');
-    newAnimeElements.forEach((element) => {
-        observerAnime.observe(element);
-        element.setAttribute('data-observed', 'true'); // Mark as observed
-        console.log('Observed new element:', element); // Debugging
+        delay: parseInt(target.getAttribute('anime-delay')) || 0,
     });
 }
 
-// Expose observeDynamicAnimeElements globally
-window.observeDynamicAnimeElements = observeDynamicAnimeElements;
+function startAnimeDown(target) {
+    prepareForAnimation(target);
 
-// Debugging
-console.log("observeDynamicAnimeElements is now globally available:", typeof window.observeDynamicAnimeElements);
+    anime({
+        targets: target,
+        translateY: [-100, 0],
+        opacity: [0, 1],
+        duration: 1000,
+        easing: 'easeInOutSine',
+        delay: parseInt(target.getAttribute('anime-delay')) || 0,
+    });
+}
 
+////////////////////////////////////////////////////////////////////////
+// Extra Animations (Restored)
+////////////////////////////////////////////////////////////////////////
 
-
-////////////////////////////////////////////////////////////////
-
-/////////// ----------- Heading Animations ---------- //////////
-
-////////////////////////////////////////////////////////////////
-
-
-
-
-
-anime({
-    targets: '.animeLogo',
-    translateX: [40, 0],
-    easing: "easeOutExpo",
-    duration: 1000,
-    delay: (el, i) => 500 + 30 * i,
-    begin: function(anim) {
-        var imageElement = document.querySelector('.animeLogo');
-        imageElement.style.opacity = '0'; // Ensure the image opacity is set to 0 at the start of the animation
-    },
-    opacity: [0, 1],
-});
-
-
-
+/**
+ * Animation for animeNavItem.
+ */
 anime({
     targets: '.animeNavItem',
     translateY: [-5, 0],
     opacity: [0, 1],
     duration: 500,
     delay: (el, i) => 500 + 30 * i,
-    //    delay: anime.stagger(100, { start: 500 }) // delay starts at 500ms then increase by 100ms for each elements.
 });
 
-// For all elements with the .animeHeading class
-var textWrappers = document.querySelectorAll('.animeHeading');
+/**
+ * Custom Animation Timeline (if required for scroll progress).
+ */
+function createAnimeTimeline(animationProperties, triggerElement) {
+    const animeTimeline = anime.timeline({ autoplay: false });
 
-textWrappers.forEach(function(textWrapper) {
-    textWrapper.innerHTML = textWrapper.textContent.replace(/\S/g, "<span class='animeLetter'>$&</span>");
+    animationProperties.forEach(props => animeTimeline.add(props));
 
-    // Anime.js timeline for the heading letters
-    anime.timeline({ loop: false })
-        .add({
-            targets: textWrapper.querySelectorAll('.animeLetter'),
-            translateX: [40, 0],
-            translateZ: [500, 0],
-            opacity: [0, 1], // Animate opacity from 0 to 1
-            easing: "easeOutExpo",
-            duration: 2000,
-            delay: (el, i) => 500 + 30 * i,
-            // Remove the Tailwind `opacity-0` class before the animation starts
-            begin: function(anim) {
-                textWrapper.classList.remove('opacity-0');
+    const scrollObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animeTimeline.seek(0); // Start animation at 0% progress
+                scrollObserver.unobserve(entry.target);
             }
         });
-});
-
-// Anime.js timeline for subheading
-anime.timeline({ loop: false })
-    .add({
-        targets: '.animeSlideHeading',
-        translateX: [40, 0],
-        opacity: [0, 1], // Animate opacity from 0 to 1
-        easing: "easeOutExpo",
-        duration: 2000,
-        delay: 500,
     });
 
-// Anime.js timeline for heading image
-anime.timeline({ loop: false })
-    .add({
-        targets: '.animeHeadingImage',
-        translateX: [-40, 0],
-        opacity: [0, 1], // Animate opacity from 0 to 1
-        easing: "easeOutExpo",
-        duration: 2000,
-        delay: 500,
-    });
+    const targetElement = document.querySelector(triggerElement);
+    if (targetElement) scrollObserver.observe(targetElement);
+}
 
+////////////////////////////////////////////////////////////////////////
+// Initialization
+////////////////////////////////////////////////////////////////////////
+
+// Wrap text with spans and initialize animations
+wrapTextWithSpans('.animeHeading');
+animateHeadingLetters();
+
+// Debugging outputs
+console.log("Animations.js loaded successfully");
+console.log("observeDynamicAnimeElements globally available:", typeof window.observeDynamicAnimeElements);
