@@ -167,21 +167,25 @@ if (logo) {
 /**
  * Animation for animeHeadingImage.
  */
-const headingImage = document.querySelector('.animeHeadingImage');
-if (headingImage) {
-    anime.timeline({ loop: false })
-        .add({
-            targets: '.animeHeadingImage',
-            translateX: [-40, 0],
-            opacity: [0, 1],
-            easing: "easeOutExpo",
-            duration: 2000,
-            delay: 500,
-            begin: () => prepareForAnimation(headingImage),
-        });
+const headingImages = document.querySelectorAll('.animeHeadingImage');
+if (headingImages.length > 0) {
+    headingImages.forEach(headingImage => {
+        prepareForAnimation(headingImage); // Ensure visibility
+
+        anime.timeline({ loop: false })
+            .add({
+                targets: headingImage, // Target the specific element
+                translateX: [-40, 0],
+                opacity: [0, 1],
+                easing: "easeOutExpo",
+                duration: 2000,
+                delay: 500,
+            });
+    });
 } else {
-    console.warn(".animeHeadingImage not found on this page, skipping animation.");
+    console.warn("No .animeHeadingImage elements found on this page.");
 }
+
 
 ////////////////////////////////////////////////////////////////////////
 // Direction-Specific Animations
