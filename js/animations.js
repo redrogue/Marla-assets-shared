@@ -1,82 +1,113 @@
-console.log("animations.js loaded");
+console.log("animations.js loaded successfully");
 
 ////////////////////////////////////////////////////////////////////////
-// Intersection Observer
+// DOM Content Loaded Initialization
 ////////////////////////////////////////////////////////////////////////
+document.addEventListener("DOMContentLoaded", function () {
+    // Scroll-based animations
+    const animatableElements = document.querySelectorAll('.animeSlideLeft, .animeSlideLeftx2, .animeSlideRight, .animeSlideRightx2, .animeSlideDown, .animeSlideUp');
+    const animations = [];
+    const triggeredOnLoad = new Set();
 
-// General Intersection Observer for anime-fade elements
+    animatableElements.forEach((element) => {
+        const animationProperties = getAnimationProperties(element);
+
+        const animation = anime({
+            targets: element,
+            ...animationProperties,
+            autoplay: false,
+            easing: 'easeOutQuad',
+        });
+
+        animations.push({ element, animation });
+    });
+
+    triggerAnimationsOnLoad();
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                updateAnimations();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    });
+
+    function triggerAnimationsOnLoad() {
+        animations.forEach(({ element, animation }) => {
+            if (isFullyInViewport(element)) {
+                animation.play();
+                triggeredOnLoad.add(element);
+            }
+        });
+    }
+
+    function updateAnimations() {
+        animations.forEach(({ element, animation }) => {
+            const rect = element.getBoundingClientRect();
+            const isPartiallyInViewport = rect.top < window.innerHeight && rect.bottom > 0;
+
+            if (!triggeredOnLoad.has(element) && isPartiallyInViewport) {
+                const boxTop = rect.top + window.pageYOffset;
+                const startScroll = boxTop - window.innerHeight * 1.2;
+                const endScroll = boxTop + element.offsetHeight * 0.2;
+
+                if (window.scrollY > startScroll && window.scrollY < endScroll) {
+                    const scrollFraction = (window.scrollY - startScroll) / (endScroll - startScroll);
+                    animation.seek(animation.duration * scrollFraction);
+                }
+            }
+        });
+    }
+
+    function isFullyInViewport(element) {
+        const rect = element.getBoundingClientRect();
+        return rect.top >= 0 && rect.bottom <= window.innerHeight;
+    }
+
+    function getAnimationProperties(element) {
+        if (element.classList.contains('animeSlideLeft')) return { translateX: [-200, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideLeftx2')) return { translateX: [400, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideRight')) return { translateX: [200, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideRightx2')) return { translateX: [400, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideDown')) return { translateY: [-200, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideUp')) return { translateY: [200, 0], opacity: [0, 1], duration: 500 };
+        return {};
+    }
+});
+
+////////////////////////////////////////////////////////////////////////
+// Intersection Observer Logic
+////////////////////////////////////////////////////////////////////////
 const observerAnime = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             const animationType = entry.target.getAttribute('anime-fade');
             switch (animationType) {
-                case 'left':
-                    startAnimeLeft(entry.target);
-                    break;
-                case 'right':
-                    startAnimeRight(entry.target);
-                    break;
-                case 'up':
-                    startAnimeUp(entry.target);
-                    break;
-                case 'down':
-                    startAnimeDown(entry.target);
-                    break;
+                case 'left': startAnimeLeft(entry.target); break;
+                case 'right': startAnimeRight(entry.target); break;
+                case 'up': startAnimeUp(entry.target); break;
+                case 'down': startAnimeDown(entry.target); break;
             }
-            observer.unobserve(entry.target); // Stop observing once triggered
+            observer.unobserve(entry.target);
         }
     });
 });
 
-// Observe all elements with the anime-fade attribute
 document.querySelectorAll('[anime-fade]').forEach(el => observerAnime.observe(el));
-
-// Dynamically added elements
-function observeDynamicAnimeElements() {
-    document.querySelectorAll('[anime-fade]:not([data-observed])').forEach(element => {
-        observerAnime.observe(element);
-        element.setAttribute('data-observed', 'true'); // Mark as observed
-    });
-}
-window.observeDynamicAnimeElements = observeDynamicAnimeElements;
 
 ////////////////////////////////////////////////////////////////////////
 // Utility Functions
 ////////////////////////////////////////////////////////////////////////
 
-/**
- * Prepare element for animation by removing `hidden-opacity` class.
- */
 function prepareForAnimation(element) {
-    if (!element) {
-        console.warn("prepareForAnimation: Element is null or undefined, skipping animation.");
-        return; // Exit the function early if the element doesn't exist
-    }
-
-    console.log("Preparing for animation:", element); // Debugging
-    element.style.opacity = "1"; // Explicitly set opacity
-    element.style.visibility = "visible"; // Make it visible
-    element.style.transform = "none"; // Reset any transform if required
-    element.classList.remove('hidden-opacity'); // Remove hidden-opacity class
-}
-
-/**
- * Wrap text in spans for animeHeading animations.
- */
-function wrapTextWithSpans(selector) {
-    const elements = document.querySelectorAll(selector);
-    if (elements.length === 0) {
-        console.warn(`No elements found for selector ${selector}.`);
-        return;
-    }
-
-    elements.forEach(el => {
-        if (!el.textContent.trim()) {
-            console.error("Empty or invalid element:", el);
-            return;
-        }
-        el.innerHTML = el.textContent.replace(/\S/g, "<span class='animeLetter'>$&</span>");
-    });
+    if (!element) return;
+    element.style.opacity = "1";
+    element.style.visibility = "visible";
+    element.style.transform = "none";
+    element.classList.remove('hidden-opacity');
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -88,7 +119,7 @@ function wrapTextWithSpans(selector) {
  */
 const navItems = document.querySelectorAll('.animeNavItem');
 if (navItems.length > 0) {
-    navItems.forEach(navItem => prepareForAnimation(navItem)); // Ensure visibility
+    navItems.forEach(navItem => prepareForAnimation(navItem));
 
     anime({
         targets: '.animeNavItem',
@@ -102,7 +133,7 @@ if (navItems.length > 0) {
 }
 
 /**
- * Animation for animeHeading.
+ * Animation for animeHeadingLetters.
  */
 function animateHeadingLetters() {
     const textWrappers = document.querySelectorAll('.animeHeading');
@@ -127,9 +158,6 @@ function animateHeadingLetters() {
     });
 }
 
-/**
- * Animation for animeSlideHeading.
- */
 const slideHeading = document.querySelector('.animeSlideHeading');
 if (slideHeading) {
     anime.timeline({ loop: false })
@@ -142,13 +170,8 @@ if (slideHeading) {
             delay: 500,
             begin: () => prepareForAnimation(slideHeading),
         });
-} else {
-    console.warn(".animeSlideHeading not found on this page, skipping animation.");
 }
 
-/**
- * Animation for animeLogo.
- */
 const logo = document.querySelector('.animeLogo');
 if (logo) {
     anime({
@@ -160,21 +183,16 @@ if (logo) {
         delay: (el, i) => 500 + 30 * i,
         begin: () => prepareForAnimation(logo),
     });
-} else {
-    console.warn(".animeLogo not found on this page, skipping animation.");
 }
 
-/**
- * Animation for animeHeadingImage.
- */
 const headingImages = document.querySelectorAll('.animeHeadingImage');
 if (headingImages.length > 0) {
     headingImages.forEach(headingImage => {
-        prepareForAnimation(headingImage); // Ensure visibility
+        prepareForAnimation(headingImage);
 
         anime.timeline({ loop: false })
             .add({
-                targets: headingImage, // Target the specific element
+                targets: headingImage,
                 translateX: [-40, 0],
                 opacity: [0, 1],
                 easing: "easeOutExpo",
@@ -182,10 +200,7 @@ if (headingImages.length > 0) {
                 delay: 500,
             });
     });
-} else {
-    console.warn("No .animeHeadingImage elements found on this page.");
 }
-
 
 ////////////////////////////////////////////////////////////////////////
 // Direction-Specific Animations
@@ -193,64 +208,33 @@ if (headingImages.length > 0) {
 
 function startAnimeLeft(target) {
     prepareForAnimation(target);
-
-    anime({
-        targets: target,
-        translateX: [100, 0],
-        opacity: [0, 1],
-        duration: 1000,
-        easing: 'easeInOutSine',
-        delay: parseInt(target.getAttribute('anime-delay')) || 0,
-    });
+    anime({ targets: target, translateX: [100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
 }
 
 function startAnimeRight(target) {
     prepareForAnimation(target);
-
-    anime({
-        targets: target,
-        translateX: [-100, 0],
-        opacity: [0, 1],
-        duration: 1000,
-        easing: 'easeInOutSine',
-        delay: parseInt(target.getAttribute('anime-delay')) || 0,
-    });
+    anime({ targets: target, translateX: [-100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
 }
 
 function startAnimeUp(target) {
     prepareForAnimation(target);
-
-    anime({
-        targets: target,
-        translateY: [100, 0],
-        opacity: [0, 1],
-        duration: 1000,
-        easing: 'easeInOutSine',
-        delay: parseInt(target.getAttribute('anime-delay')) || 0,
-    });
+    anime({ targets: target, translateY: [100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
 }
 
 function startAnimeDown(target) {
     prepareForAnimation(target);
-
-    anime({
-        targets: target,
-        translateY: [-100, 0],
-        opacity: [0, 1],
-        duration: 1000,
-        easing: 'easeInOutSine',
-        delay: parseInt(target.getAttribute('anime-delay')) || 0,
-    });
+    anime({ targets: target, translateY: [-100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
 }
 
 ////////////////////////////////////////////////////////////////////////
-// Initialization
+// Text Wrapping for Headings
 ////////////////////////////////////////////////////////////////////////
-
-// Wrap text with spans and initialize animations
+function wrapTextWithSpans(selector) {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach(el => {
+        if (!el.textContent.trim()) return;
+        el.innerHTML = el.textContent.replace(/\S/g, "<span class='animeLetter'>$&</span>");
+    });
+}
 wrapTextWithSpans('.animeHeading');
 animateHeadingLetters();
-
-// Debugging outputs
-console.log("Animations.js loaded successfully");
-console.log("observeDynamicAnimeElements globally available:", typeof window.observeDynamicAnimeElements);
