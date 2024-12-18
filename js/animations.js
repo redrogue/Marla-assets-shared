@@ -98,6 +98,15 @@ const observerAnime = new IntersectionObserver((entries, observer) => {
 
 document.querySelectorAll('[anime-fade]').forEach(el => observerAnime.observe(el));
 
+// Function for dynamically added elements
+function observeDynamicAnimeElements() {
+    document.querySelectorAll('[anime-fade]:not([data-observed])').forEach(element => {
+        observerAnime.observe(element);
+        element.setAttribute('data-observed', 'true');
+    });
+}
+window.observeDynamicAnimeElements = observeDynamicAnimeElements;
+
 ////////////////////////////////////////////////////////////////////////
 // Utility Functions
 ////////////////////////////////////////////////////////////////////////
