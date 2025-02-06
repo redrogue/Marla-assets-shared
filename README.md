@@ -1,4 +1,42 @@
-# Run this in the Terminal in the Project
+# Subtree: Run this in the Terminal in the Project
+
+This will create the folders
+
+```
+git remote add marla-shared https://github.com/redrogue/Marla-assets-shared.git 
+
+git remote -v
+```
+Add the subtree 
+
+```
+git subtree add --prefix=assets-shared marla-shared develop --squash 
+```
+
+Commit subtree: 
+
+```
+git add . git commit -m "Add subtree for Marla-assets-shared (develop)" 
+```
+
+Push subtree 
+```
+git push origin develop 
+```
+
+## Ongoing management (to be used in project using the shared assets) 
+
+Manually push to Shared location (push changes to here): 
+```
+git subtree push --prefix=assets-shared marla-shared develop 
+```
+
+Manually pull from shared location (pull changes from here): 
+```
+git subtree pull  --prefix=assets-shared  marla-shared develop --squash 
+```
+
+# Submodule: Run this in the Terminal in the Project
 
 This will create the folders
 
