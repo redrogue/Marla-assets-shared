@@ -1,6 +1,6 @@
 # Subtree: Run this in the Terminal in the Project
 
-This will create the folders
+This will create the folders in public/
 
 ```
 git remote add marla-shared https://github.com/redrogue/Marla-assets-shared.git 
@@ -10,7 +10,7 @@ git remote -v
 Add the subtree 
 
 ```
-git subtree add --prefix=assets-shared marla-shared develop --squash 
+git subtree add --prefix=public/assets-shared marla-shared develop --squash 
 ```
 
 Commit subtree: 
@@ -26,14 +26,14 @@ git push origin develop
 
 ## Ongoing management (to be used in project using the shared assets) 
 
-Manually push to Shared location (push changes to here): 
+Manually push to Shared location from public/ (push changes to here): 
 ```
-git subtree push --prefix=assets-shared marla-shared develop 
+git subtree push --prefix=public/assets-shared marla-shared develop 
 ```
 
 Manually pull from shared location (pull changes from here): 
 ```
-git subtree pull  --prefix=assets-shared  marla-shared develop --squash 
+git subtree pull  --prefix=public/assets-shared  marla-shared develop --squash 
 ```
 
 # Submodule: Run this in the Terminal in the Project
