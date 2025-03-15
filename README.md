@@ -1,6 +1,6 @@
 # Subtree: Run this in the Terminal in the Project
 
-This will create the folders in public/
+This will create the folders in src/
 
 ```
 git remote add marla-shared https://github.com/redrogue/Marla-assets-shared.git 
@@ -10,7 +10,7 @@ git remote -v
 Add the subtree 
 
 ```
-git subtree add --prefix=public/assets-shared marla-shared develop --squash 
+git subtree add --prefix=src/assets-shared marla-shared develop --squash 
 ```
 
 Commit subtree: 
@@ -26,14 +26,14 @@ git push origin develop
 
 ## Ongoing management (to be used in project using the shared assets) 
 
-Manually push to Shared location from public/ (push changes to here): 
+Manually push to Shared location from src/ (push changes to here): 
 ```
-git subtree push --prefix=public/assets-shared marla-shared develop 
+git subtree push --prefix=src/assets-shared marla-shared develop 
 ```
 
 Manually pull from shared location (pull changes from here): 
 ```
-git subtree pull  --prefix=public/assets-shared  marla-shared develop --squash 
+git subtree pull  --prefix=src/assets-shared  marla-shared develop --squash 
 ```
 
 # Submodule: Run this in the Terminal in the Project
@@ -41,11 +41,11 @@ git subtree pull  --prefix=public/assets-shared  marla-shared develop --squash
 This will create the folders
 
 ```
-git submodule add https://github.com/redrogue/Marla-assets-shared.git public/assets-shared
+git submodule add https://github.com/redrogue/Marla-assets-shared.git src/assets-shared
 
 git submodule update --init --recursive
 
-git add .gitmodules public/assets-shared
+git add .gitmodules src/assets-shared
 
 git commit -m "Added shared assets as a submodule"
 
@@ -73,7 +73,7 @@ git submodule update --init --recursive
 
 git add .gitmodules [new folder location]
 
-git commit -m "Moved submodule to public/shared-assets"
+git commit -m "Moved submodule to src/shared-assets"
 
 // Manually delete current folder
 
