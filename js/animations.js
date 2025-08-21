@@ -126,20 +126,44 @@ function prepareForAnimation(element) {
 /**
  * Animation for animeNavItem.
  */
-const navItems = document.querySelectorAll('.animeNavItem');
-if (navItems.length > 0) {
-    navItems.forEach(navItem => prepareForAnimation(navItem));
+function initNavAnimations() {
+    // Bail if there’s no <nav> at all
+    const navContainer = document.querySelector('nav');
+    if (!navContainer) return;
 
-    anime({
-        targets: '.animeNavItem',
-        translateY: [-5, 0],
-        opacity: [0, 1],
-        duration: 500,
-        delay: (el, i) => 500 + 30 * i,
-    });
-} else {
-    console.warn("No .animeNavItem elements found on this page.");
+    // — Nav-item animations —
+    const navItems = navContainer.querySelectorAll('.animeNavItem');
+    if (navItems.length) {
+        navItems.forEach(i => prepareForAnimation(i));
+        anime({
+            targets: '.animeNavItem',
+            translateY: [-5, 0],
+            opacity: [0, 1],
+            duration: 500,
+            delay: (el, i) => 500 + 30 * i,
+        });
+    }
+    // else: silently do nothing
+
+    // — Logo animation —
+    const logo = navContainer.querySelector('.animeLogo');
+    if (logo) {
+        prepareForAnimation(logo);
+        anime({
+            targets: '.animeLogo',
+            translateX: [40, 0],
+            opacity: [0, 1],
+            easing: 'easeOutExpo',
+            duration: 1000,
+            delay: 500,
+        });
+    }
 }
+
+// Always hook it on a normal page load…
+document.addEventListener('DOMContentLoaded', initNavAnimations);
+// …and again right after your host‐page fires `nav:loaded`
+document.addEventListener('nav:loaded', initNavAnimations);
 
 /**
  * Animation for animeHeadingLetters.
@@ -181,18 +205,7 @@ if (slideHeading) {
         });
 }
 
-const logo = document.querySelector('.animeLogo');
-if (logo) {
-    anime({
-        targets: '.animeLogo',
-        translateX: [40, 0],
-        opacity: [0, 1],
-        easing: "easeOutExpo",
-        duration: 1000,
-        delay: (el, i) => 500 + 30 * i,
-        begin: () => prepareForAnimation(logo),
-    });
-}
+
 
 const headingImages = document.querySelectorAll('.animeHeadingImage');
 if (headingImages.length > 0) {
@@ -247,3 +260,10 @@ function wrapTextWithSpans(selector) {
 }
 wrapTextWithSpans('.animeHeading');
 animateHeadingLetters();
+
+
+
+// Run once on full page load:
+document.addEventListener('DOMContentLoaded', initNavAnimations);
+// Run again right after nav injection:
+document.addEventListener('nav:loaded', initNavAnimations);
