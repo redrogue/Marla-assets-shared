@@ -193,22 +193,53 @@
 /* ***************** MODAL ******************** */
 /*  ********************************************** */
 
-.modalWindow {
-  display: none; /* Hidden by default */
-  position: fixed; /* Stay in place */
-  z-index: 1001; /* Sit on top */
+/* Legacy DIV-based modal (default hidden; shown when JS adds .is-open) */
+div.modalWindow {
+  display: none;              /* Hidden by default */
+  position: fixed;            /* Overlay */
   left: 0;
   top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
+  width: 100%;                /* Full screen */
+  height: 100%;
+  overflow: auto;             /* Enable scroll if needed (overlay scrollbars) */
+  background: #fff;
+  z-index: 1001;
+  border: none;
 }
+div.modalWindow.is-open {
+  display: block;             /* Show when opened via JS */
+}
+
+/* Modern <dialog>-based modal */
+dialog.modalWindow {
+  border: none;
+  margin: 0;                  /* Remove UA margins */
+  padding: 0;                 /* Remove UA padding */
+  box-shadow: none;           /* Remove UA shadow */
+  border-radius: 0;           /* Ensure no rounding at edges */
+  max-width: none;            /* Allow full-bleed */
+}
+dialog.modalWindow[open] {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;             /* Match legacy behavior */
+  display: block;
+  padding: 0;                 /* Ensure no inner padding when open */
+  background: #fff;
+  z-index: 1001;
+}
+dialog.modalWindow::backdrop {
+  background: transparent;    /* No extra browser backdrop shading */
+}
+
 .modalContent {
   max-height: 100vh; /* Maximum height - vh units help with responsiveness */
   overflow-y: auto; /* Enables vertical scrolling if content overflows */
   animation: expandFromTopRight 0.3s ease-out;
   background-color: #fff;
-
 } 
 
 .modalClose {
