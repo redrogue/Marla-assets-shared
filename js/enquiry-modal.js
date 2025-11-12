@@ -59,22 +59,20 @@ function setupContactForm(modal, options) {
   const branchSection = modal.querySelector("#branchSection");
   const formSection = modal.querySelector("#formSection");
 
-  // const BRANCHES = {
-  //   general: { label: "General Enquiry", phone: "01234 000000", email: "sales@teadfast.co.uk" },
-  //   manchester: { label: "Steadfast Manchester", phone: "01234 111111", email: "sales.hyde@steadfast.co.uk" },
-  //   aberdeen: { label: "Steadfast Aberdeen", phone: "01234 222222", email: "sales.aberdeen@steadscott.co.uk" },
-  //   dubai: { label: "Steadfast Dubai", phone: "01234 333333", email: "sales.dubai@steadfast.co.uk" },
-  //   thornaby: { label: "Steadfast Thornaby", phone: "01234 444444", email: "sales.thornaby@steadfast.co.uk" },
-  // };
-
-
-  const BRANCHES = {
-    general: { label: "General Enquiry", phone: "01234 000000", email: "rob@circle10.com", formName: "steadfast-enquiry-modal-general" },
-    manchester: { label: "Steadfast Manchester", phone: "01234 111111", email: "rob@circle10.com", formName: "steadfast-enquiry-modal-manchester" },
-    aberdeen: { label: "Steadfast Aberdeen", phone: "01234 222222", email: "rob@circle10.com", formName: "steadfast-enquiry-modal-aberdeen" },
-    dubai: { label: "Steadfast Dubai", phone: "01234 333333", email: "rob@circle10.com", formName: "steadfast-enquiry-modal-dubai" },
-    thornaby: { label: "Steadfast Thornaby", phone: "01234 444444", email: "rob@circle10.com", formName: "steadfast-enquiry-modal-thornaby" },
-  };
+  // Load site-specific branch data from HTML
+  const branchesDataEl = modal.querySelector("#branches-data");
+  if (!branchesDataEl) {
+    console.error("Branch data not found in modal HTML. Please add a <script type='application/json' id='branches-data'> element.");
+    return;
+  }
+  
+  let BRANCHES;
+  try {
+    BRANCHES = JSON.parse(branchesDataEl.textContent);
+  } catch (e) {
+    console.error("Failed to parse branch data:", e);
+    return;
+  }
 
   // Apply metadata (guard if fields are missing)
   const defaultSubject = options.subject || "General Enquiry";
