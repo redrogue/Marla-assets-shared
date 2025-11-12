@@ -48,7 +48,7 @@ function setupContactForm(modal, options) {
   const thankYouPanel = modal.querySelector("#thanksMessage");
   const sourceField = modal.querySelector("#sourcePage");
   const subjectField = modal.querySelector("#subject"); // Hidden subject field (from branch data)
-  const titleField = modal.querySelector("#title"); // Visible title field (editable)
+  const titleField = modal.querySelector("#enquiry_title"); // Visible title field (editable)
   const sendToField = modal.querySelector("#sendTo");
   const branchOutput = modal.querySelector("#branchOutput");
   const contactBranchName = modal.querySelector("#contactBranchName");
