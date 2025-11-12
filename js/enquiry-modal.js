@@ -47,6 +47,7 @@ function setupContactForm(modal, options) {
 
   const thankYouPanel = modal.querySelector("#thanksMessage");
   const sourceField = modal.querySelector("#sourcePage");
+  const subjectField = modal.querySelector("#subject"); // Hidden subject field (from branch data)
   const titleField = modal.querySelector("#title"); // Visible title field (editable)
   const sendToField = modal.querySelector("#sendTo");
   const branchOutput = modal.querySelector("#branchOutput");
@@ -79,7 +80,15 @@ function setupContactForm(modal, options) {
   // Accept both 'title' and 'subject' for backward compatibility
   const defaultTitle = options.title || options.subject || "General Enquiry";
 
-  // Set the title field (pre-populated but editable by user)
+  // Set the hidden subject field (from branch data, for email subject line)
+  const setSubject = value => {
+    if (!subjectField) return;
+    const val = value || "";
+    subjectField.value = val;
+    subjectField.setAttribute("value", val);
+  };
+
+  // Set the title field (pre-populated but editable by user, for email body)
   const setTitle = value => {
     if (!titleField) return;
     const val = value || "";
@@ -113,7 +122,10 @@ function setupContactForm(modal, options) {
     // Reset form name
     setFormName("[DYNAMIC - SET BY JAVASCRIPT]");
     
-    // Reset title
+    // Reset subject and title
+    if (subjectField) {
+      subjectField.value = "";
+    }
     if (titleField) {
       titleField.value = "";
     }
@@ -175,7 +187,10 @@ function setupContactForm(modal, options) {
         }
       }
       if (phoneOutput) phoneOutput.textContent = `${branch.phone}`;
-      setTitle(options.title || options.subject || branch.subject || `${branch.label} Enquiry`);
+      // Set hidden subject from branch data (for email subject line)
+      setSubject(branch.subject || `${branch.label} Enquiry`);
+      // Set visible title field (for email body, pre-populated but editable)
+      setTitle(options.title || options.subject || "");
     });
   });
 
@@ -201,7 +216,10 @@ function setupContactForm(modal, options) {
       }
     }
     if (phoneOutput) phoneOutput.textContent = `${b.phone}`;
-    setTitle(options.title || options.subject || b.subject || `${b.label} Enquiry`);
+    // Set hidden subject from branch data (for email subject line)
+    setSubject(b.subject || `${b.label} Enquiry`);
+    // Set visible title field (for email body, pre-populated but editable)
+    setTitle(options.title || options.subject || "");
   }
 
   // Store resetForm on modal for access from close handlers
