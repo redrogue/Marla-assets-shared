@@ -69,11 +69,11 @@ function setupContactForm(modal, options) {
 
 
   const BRANCHES = {
-    general: { label: "General Enquiry", phone: "01234 000000", email: "rob@circle10.com" },
-    manchester: { label: "Steadfast Manchester", phone: "01234 111111", email: "rob@circle10.com" },
-    aberdeen: { label: "Steadfast Aberdeen", phone: "01234 222222", email: "rob@circle10.com" },
-    dubai: { label: "Steadfast Dubai", phone: "01234 333333", email: "rob@circle10.com" },
-    thornaby: { label: "Steadfast Thornaby", phone: "01234 444444", email: "rob@circle10.com" },
+    general: { label: "General Enquiry", phone: "01234 000000", email: "rob@circle10.com", formName: "steadfast-enquiry-modal-general" },
+    manchester: { label: "Steadfast Manchester", phone: "01234 111111", email: "rob@circle10.com", formName: "steadfast-enquiry-modal-manchester" },
+    aberdeen: { label: "Steadfast Aberdeen", phone: "01234 222222", email: "rob@circle10.com", formName: "steadfast-enquiry-modal-aberdeen" },
+    dubai: { label: "Steadfast Dubai", phone: "01234 333333", email: "rob@circle10.com", formName: "steadfast-enquiry-modal-dubai" },
+    thornaby: { label: "Steadfast Thornaby", phone: "01234 444444", email: "rob@circle10.com", formName: "steadfast-enquiry-modal-thornaby" },
   };
 
   // Apply metadata (guard if fields are missing)
@@ -84,6 +84,19 @@ function setupContactForm(modal, options) {
     const val = value || "";
     subjectField.value = val;
     subjectField.setAttribute("value", val);
+  };
+
+  // Function to update form name dynamically
+  // Updates both the form's name attribute AND the hidden form-name input's value
+  const setFormName = (formName) => {
+    if (!form) return;
+    const formNameInput = form.querySelector('input[name="form-name"]');
+    if (formNameInput) {
+      formNameInput.value = formName;
+      formNameInput.setAttribute("value", formName);
+    }
+    form.name = formName;
+    form.setAttribute("name", formName);
   };
 
   if (sourceField) sourceField.value = options.source || "Website Enquiry";
@@ -110,6 +123,9 @@ function setupContactForm(modal, options) {
       if (formSection) formSection.classList.remove("hidden");
       if (formWrapper) formWrapper.classList.remove("hidden");
 
+      // Update form name to branch-specific form name
+      setFormName(branch.formName);
+
       if (sendToField) sendToField.value = branch.email;
       if (branchOutput) branchOutput.textContent = `${branch.label}`;
       if (contactBranchName) contactBranchName.textContent = `${branch.label}`;
@@ -132,6 +148,10 @@ function setupContactForm(modal, options) {
     if (branchSection) branchSection.classList.add("hidden");
     if (formSection) formSection.classList.remove("hidden");
     if (formWrapper) formWrapper.classList.remove("hidden");
+    
+    // Update form name to branch-specific form name
+    setFormName(b.formName);
+    
     if (sendToField) sendToField.value = b.email;
     if (branchOutput) branchOutput.textContent = `${b.label}`;
     if (contactBranchName) contactBranchName.textContent = `${b.label}`;
@@ -194,13 +214,20 @@ function setupContactForm(modal, options) {
 
     const formData = new FormData(form);
     try {
-      await fetch("/", {
+      const response = await fetch("/", {
         method: "POST",
         body: formData,
+        headers: { Accept: "application/json" },
       });
 
-      form.classList.add("hidden");
-      if (thankYouPanel) thankYouPanel.classList.remove("hidden");
+      if (response.ok) {
+        // Hide form wrapper, show thank you message
+        if (formWrapper) formWrapper.classList.add("hidden");
+        if (thankYouPanel) thankYouPanel.classList.remove("hidden");
+      } else {
+        console.error("Form submission failed:", await response.text());
+        alert("Sorry, something went wrong. Please try again.");
+      }
     } catch (err) {
       console.error("Form submission failed", err);
       alert("Sorry, something went wrong. Please try again.");
