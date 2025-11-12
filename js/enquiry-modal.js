@@ -8,7 +8,7 @@ console.log("enquiry-modal.js loaded");
 // <a href="#!"
 //    onclick="openModal('modal-enquiries', {
 //      source: 'Flange Fittings Page',
-//      subject: 'Flange Product Enquiry',
+//      title: 'Flange Product Enquiry',
 //      preselectedBranch: 'south'
 //    })">
 //   Enquire (South Branch)
@@ -47,7 +47,7 @@ function setupContactForm(modal, options) {
 
   const thankYouPanel = modal.querySelector("#thanksMessage");
   const sourceField = modal.querySelector("#sourcePage");
-  const subjectField = modal.querySelector("#subject");
+  const titleField = modal.querySelector("#title"); // Visible title field (editable)
   const sendToField = modal.querySelector("#sendTo");
   const branchOutput = modal.querySelector("#branchOutput");
   const contactBranchName = modal.querySelector("#contactBranchName");
@@ -76,13 +76,47 @@ function setupContactForm(modal, options) {
   }
 
   // Apply metadata (guard if fields are missing)
-  const defaultSubject = options.subject || "General Enquiry";
+  // Accept both 'title' and 'subject' for backward compatibility
+  const defaultTitle = options.title || options.subject || "General Enquiry";
 
-  const setSubject = value => {
-    if (!subjectField) return;
+  // Set the title field (pre-populated but editable by user)
+  const setTitle = value => {
+    if (!titleField) return;
     const val = value || "";
-    subjectField.value = val;
-    subjectField.setAttribute("value", val);
+    titleField.value = val;
+  };
+
+  // Reset form to initial state
+  const resetForm = () => {
+    // Reset form fields
+    if (form) form.reset();
+    
+    // Reset UI state
+    if (branchSection) branchSection.classList.remove("hidden");
+    if (formSection) formSection.classList.add("hidden");
+    if (formWrapper) formWrapper.classList.add("hidden");
+    if (thankYouPanel) thankYouPanel.classList.add("hidden");
+    
+    // Clear branch-specific outputs
+    if (branchOutput) branchOutput.textContent = "";
+    if (contactBranchName) contactBranchName.textContent = "";
+    if (emailOutput) {
+      if (emailOutput.tagName && emailOutput.tagName.toLowerCase() === "a") {
+        emailOutput.href = "";
+        emailOutput.textContent = "";
+      } else {
+        emailOutput.textContent = "";
+      }
+    }
+    if (phoneOutput) phoneOutput.textContent = "";
+    
+    // Reset form name
+    setFormName("[DYNAMIC - SET BY JAVASCRIPT]");
+    
+    // Reset title
+    if (titleField) {
+      titleField.value = "";
+    }
   };
 
   // Function to update form name dynamically
@@ -98,8 +132,12 @@ function setupContactForm(modal, options) {
     form.setAttribute("name", formName);
   };
 
+  // Reset form to initial state first
+  resetForm();
+  
+  // Then apply options
   if (sourceField) sourceField.value = options.source || "Website Enquiry";
-  setSubject(defaultSubject);
+  setTitle(defaultTitle);
 
   // Rebuild branch cards
   branchContainer.innerHTML = "";
@@ -137,7 +175,7 @@ function setupContactForm(modal, options) {
         }
       }
       if (phoneOutput) phoneOutput.textContent = `${branch.phone}`;
-      setSubject(options.subject || `${branch.label} Enquiry`);
+      setTitle(options.title || options.subject || branch.subject || `${branch.label} Enquiry`);
     });
   });
 
@@ -163,8 +201,11 @@ function setupContactForm(modal, options) {
       }
     }
     if (phoneOutput) phoneOutput.textContent = `${b.phone}`;
-    setSubject(options.subject || `${b.label} Enquiry`);
+    setTitle(options.title || options.subject || b.subject || `${b.label} Enquiry`);
   }
+
+  // Store resetForm on modal for access from close handlers
+  modal._resetForm = resetForm;
 
   // Bind close button - inline onclick doesn't work with dynamic HTML in modules
   const closeBtn = modal.querySelector(".modalClose");
@@ -172,6 +213,7 @@ function setupContactForm(modal, options) {
     closeBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
+      resetForm();
       window.closeModal('modal-enquiries');
     });
     closeBtn.dataset.bound = "true";
@@ -200,9 +242,22 @@ function setupContactForm(modal, options) {
       }
       if (phoneOutput) phoneOutput.textContent = "";
       if (thankYouPanel) thankYouPanel.classList.add("hidden");
-      setSubject(defaultSubject);
+      if (titleField) titleField.value = "";
     });
     backBtn.dataset.bound = "true";
+  }
+
+  // Bind thank you message close button
+  const thanksCloseBtn = modal.querySelector("#thanksMessage button[onclick*='closeModal']");
+  if (thanksCloseBtn && !thanksCloseBtn.dataset.bound) {
+    thanksCloseBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      resetForm();
+      window.closeModal('modal-enquiries');
+    });
+    // Remove inline onclick since we're handling it with addEventListener
+    thanksCloseBtn.removeAttribute("onclick");
+    thanksCloseBtn.dataset.bound = "true";
   }
 
   form.addEventListener("submit", async e => {

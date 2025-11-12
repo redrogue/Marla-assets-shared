@@ -49,6 +49,11 @@ function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
 
+  // Call reset function if it exists (for enquiry modal)
+  if (modal._resetForm && typeof modal._resetForm === "function") {
+    modal._resetForm();
+  }
+
   const isDialog = modal.tagName?.toLowerCase() === "dialog";
   if (isDialog && modal.close) {
     modal.close();
