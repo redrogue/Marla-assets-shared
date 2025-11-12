@@ -60,7 +60,8 @@ function setupContactForm(modal, options) {
   const formSection = modal.querySelector("#formSection");
 
   // Load site-specific branch data from HTML
-  const branchesDataEl = modal.querySelector("#branches-data");
+  // The script tag is inserted alongside the modal, so query from document
+  const branchesDataEl = document.querySelector("#branches-data");
   if (!branchesDataEl) {
     console.error("Branch data not found in modal HTML. Please add a <script type='application/json' id='branches-data'> element.");
     return;
