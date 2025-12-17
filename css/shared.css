@@ -27,22 +27,32 @@
 }
 
 
-
-
 @layer components {
 
   /* 
   APPROVALS
   */
-
   .cust_cert-badges {
-          @apply m-1 rounded-full py-1 px-4 text-xs font-medium text-white leading-[30px]; /* removed bg-red-700  */
-          background-color: var(--primary-bg);
+          @apply inline-flex px-3 py-1 items-center rounded-full bg-customPrimaryBG font-medium text-white text-sm mr-2 mb-2;
+          line-height: 1;
       }    
       
+  /* Main navigation links */
+      
   .cust_nav-lnk {
-          @apply font-light text-gray-100 hover:text-gray-400;
-       }    
+          @apply font-light text-gray-100 hover:text-gray-200;
+       }
+  nav .cust_nav-lnk,
+  header .cust_nav-lnk {
+          @apply text-gray-100 hover:text-gray-200;
+          color: var(--color-gray-100);
+       }
+
+  /* Ensure header/nav text inherits light color */
+  header nav,
+  header nav a {
+      color: var(--color-gray-100);
+  }
 
   .cust_nav-selected {
       @apply font-bold;
@@ -80,16 +90,15 @@
   SERVICES
   */
   #scrollSpyNav-1 a {
-      @apply  pt-3 pb-4 md:pt-2 md:pb-3 px-6 text-white leading-6 text-sm; /*removed  bg-red-700 AND border-red-700 AND hover:text-red-300 */
+      @apply inline-flex items-center whitespace-nowrap pt-3 pb-4 md:pt-2 md:pb-3 px-6 text-white leading-6 text-sm;
       background-color: var(--primary-bg);
   }
   #scrollSpyNav-1 a:hover {color: var(--primary-highlight)}
   
   #scrollSpyNav-1 a.scrollSpyActive {
-       /*text-red-200 AND bg-red-700 */
       color: var(--primary-highlight);
       background-color: var(--primary-lowlight);
-      }
+  }
 
 
   .cust_path-panel{
