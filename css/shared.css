@@ -87,7 +87,7 @@
   
   #scrollSpyNav-1 a.scrollSpyActive {
        /*text-red-200 AND bg-red-700 */
-      color: var(--color-gray-100);
+      color: var(--primary-highlight);
       background-color: var(--primary-lowlight);
       }
 
