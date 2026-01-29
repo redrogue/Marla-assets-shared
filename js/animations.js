@@ -80,6 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 ////////////////////////////////////////////////////////////////////////
 // Intersection Observer Logic
+// rootMargin extends the "view" downward so anime triggers earlier (before element is in viewport)
 ////////////////////////////////////////////////////////////////////////
 const observerAnime = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
@@ -94,7 +95,7 @@ const observerAnime = new IntersectionObserver((entries, observer) => {
             observer.unobserve(entry.target);
         }
     });
-});
+}, { rootMargin: '0px 0px 200px 0px', threshold: 0 });
 
 document.querySelectorAll('[anime-fade]').forEach(el => observerAnime.observe(el));
 
