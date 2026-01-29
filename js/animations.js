@@ -95,7 +95,7 @@ const observerAnime = new IntersectionObserver((entries, observer) => {
             observer.unobserve(entry.target);
         }
     });
-}, { rootMargin: '0px 0px 200px 0px', threshold: 0 });
+}, { rootMargin: '0px 0px 150px 0px', threshold: 0 });
 
 document.querySelectorAll('[anime-fade]').forEach(el => observerAnime.observe(el));
 
