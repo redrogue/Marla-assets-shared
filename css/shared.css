@@ -294,9 +294,12 @@ dialog.modalWindow::backdrop {
   position: relative;
 }
 
-/* Slide */
+/* Slide: first visible by default so its image loads immediately; JS toggles which is shown */
 .carouselSlide {
-    display: none; 
+    display: none;
+}
+.carouselContainer > .carouselSlide:first-child {
+    display: block;
 }
 
 
