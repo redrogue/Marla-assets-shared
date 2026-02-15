@@ -313,6 +313,7 @@ dialog.modalWindow::backdrop {
   background-color: #cfcfcf; /* Default background */
   display: inline-block;
   transition: background-color 0.6s ease;
+  border-radius: 5px;
 }
 
 .carouselDash:hover, .carouselActive {
@@ -327,6 +328,8 @@ dialog.modalWindow::backdrop {
   height: 100%; /* Full height of the dash */
   background: #868686; /* Progress bar color */
   width: 0%; /* Start with no progress */
+  border-radius: 5px;
+
 }
 
 
