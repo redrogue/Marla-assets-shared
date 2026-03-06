@@ -288,8 +288,11 @@ function setupContactForm(modal, options) {
     try {
       const response = await fetch("/", {
         method: "POST",
-        body: formData,
-        headers: { Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
+        },
+        body: new URLSearchParams(formData).toString(),
       });
 
       if (response.ok) {
