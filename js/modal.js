@@ -76,6 +76,7 @@ window.addEventListener("click", e => {
   if (!modalEl) return;
 
   if (e.target === modalEl) {
+    if (modalEl.id === "modal-enquiries") return;
     closeModal(modalEl.id);
   }
 });

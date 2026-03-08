@@ -225,9 +225,9 @@ dialog.modalWindow[open] {
   top: 0;
   width: 100%;
   height: 100%;
-  overflow: auto;             /* Match legacy behavior */
+  overflow: auto;             /* Scrollbar at viewport edge */
   display: block;
-  padding: 0;                 /* Ensure no inner padding when open */
+  padding: 0;
   background: #fff;
   z-index: 1001;
 }
@@ -236,8 +236,7 @@ dialog.modalWindow::backdrop {
 }
 
 .modalContent {
-  max-height: 100vh; /* Maximum height - vh units help with responsiveness */
-  overflow-y: auto; /* Enables vertical scrolling if content overflows */
+  /* Overflow on .modalWindow so scrollbar sits at viewport edge, not inside content */
   animation: expandFromTopRight 0.3s ease-out;
   background-color: #fff;
 } 

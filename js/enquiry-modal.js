@@ -22,19 +22,26 @@ export async function initContactModal(options = {}) {
 
   // Only fetch and insert once
   if (!modal) {
-    // Build the correct relative path to _enquiry-modal.html
-    const modalUrl = `${window.location.pathname.replace(/[^/]*$/, "")}_enquiry-modal.html`;
+    // Resolve modal URL from the main script (assets/index.js) so it works whether
+    // served from project root, dist/, or nested routes (e.g. /products/foo.html).
+    const scriptEl = document.querySelector('script[src*="index.js"]');
+    const baseUrl = scriptEl ? scriptEl.src : window.location.href;
+    const modalUrl = new URL("../_enquiry-modal.html", baseUrl).href;
 
-    // 🔸 Fetch fresh each time during development to avoid caching issues
-    const html = await (await fetch(`${modalUrl}?v=${Date.now()}`, { cache: "no-store" })).text();
-
-    // Insert into the DOM
-    document.body.insertAdjacentHTML("beforeend", html);
-
-    // Re-query for the newly inserted element
-    modal = document.getElementById("modal-enquiries");
+    try {
+      const res = await fetch(`${modalUrl}?v=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Failed to load enquiry form (${res.status})`);
+      const html = await res.text();
+      document.body.insertAdjacentHTML("beforeend", html);
+      modal = document.getElementById("modal-enquiries");
+    } catch (err) {
+      console.error("Enquiry modal load failed:", err);
+      alert("Unable to load the contact form. Please refresh the page or try again later.");
+      return;
+    }
   }
 
+  if (!modal) return;
   setupContactForm(modal, options);
 
   if (modal.showModal) modal.showModal();
@@ -42,6 +49,7 @@ export async function initContactModal(options = {}) {
 }
 
 function setupContactForm(modal, options) {
+  if (!modal) return;
   const form = modal.querySelector("#contactForm");
   if (!form) return;
 
