@@ -197,8 +197,10 @@ function setupContactForm(modal, options) {
       if (phoneOutput) phoneOutput.textContent = `${branch.phone}`;
       // Set hidden subject from branch data (for email subject line)
       setSubject(branch.subject || `${branch.label} Enquiry`);
-      // Set visible title field (for email body, pre-populated but editable)
-      setTitle(options.title || options.subject || "");
+      // Title: use branch title when link passed generic/no title, else keep link title
+      const linkTitle = options.title || options.subject || "";
+      const useBranchTitle = !linkTitle || linkTitle === "General Enquiry";
+      setTitle(useBranchTitle ? (branch.title || `${branch.label} Enquiry`) : linkTitle);
     });
   });
 
@@ -226,8 +228,10 @@ function setupContactForm(modal, options) {
     if (phoneOutput) phoneOutput.textContent = `${b.phone}`;
     // Set hidden subject from branch data (for email subject line)
     setSubject(b.subject || `${b.label} Enquiry`);
-    // Set visible title field (for email body, pre-populated but editable)
-    setTitle(options.title || options.subject || "");
+    // Title: use branch title when link passed generic/no title, else keep link title
+    const linkTitle = options.title || options.subject || "";
+    const useBranchTitle = !linkTitle || linkTitle === "General Enquiry";
+    setTitle(useBranchTitle ? (b.title || `${b.label} Enquiry`) : linkTitle);
   }
 
   // Store resetForm on modal for access from close handlers
