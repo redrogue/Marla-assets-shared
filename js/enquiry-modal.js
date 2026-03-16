@@ -308,6 +308,11 @@ function setupContactForm(modal, options) {
       });
 
       if (response.ok) {
+        // Record form submission in Fathom (only when script is loaded, e.g. on production)
+        if (window.fathom && typeof window.fathom.trackEvent === "function") {
+          const eventName = form.name === "mtf-pressfit" ? "MTF Pressfit enquiry" : "General enquiry";
+          window.fathom.trackEvent(eventName);
+        }
         // Hide form wrapper, show thank you message
         if (formWrapper) formWrapper.classList.add("hidden");
         if (thankYouPanel) thankYouPanel.classList.remove("hidden");
