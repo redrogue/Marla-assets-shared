@@ -1,9 +1,19 @@
 console.log("animations.js loaded successfully");
 
+// Resolve via globalThis so ES modules always see the UMD global from the classic anime script.
+const anime = globalThis.anime;
+const hasAnime = typeof anime === "function";
+if (!hasAnime) {
+    console.warn(
+        "[Marla] anime.js is not available (failed to load, wrong order, or blocked). Showing static layout; other scripts will still run."
+    );
+}
+
 ////////////////////////////////////////////////////////////////////////
 // DOM Content Loaded Initialization
 ////////////////////////////////////////////////////////////////////////
 document.addEventListener("DOMContentLoaded", function () {
+    if (!hasAnime) return;
     // Scroll-based animations
     const animatableElements = document.querySelectorAll('.animeSlideLeft, .animeSlideLeftx2, .animeSlideRight, .animeSlideRightx2, .animeSlideDown, .animeSlideUp');
     const animations = [];
@@ -82,25 +92,44 @@ document.addEventListener("DOMContentLoaded", function () {
 // Intersection Observer Logic
 // rootMargin extends the "view" downward so anime triggers earlier (before element is in viewport)
 ////////////////////////////////////////////////////////////////////////
-const observerAnime = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const animationType = entry.target.getAttribute('anime-fade');
-            switch (animationType) {
-                case 'left': startAnimeLeft(entry.target); break;
-                case 'right': startAnimeRight(entry.target); break;
-                case 'up': startAnimeUp(entry.target); break;
-                case 'down': startAnimeDown(entry.target); break;
+let observerAnime = null;
+
+function revealAnimeFadeEl(target) {
+    prepareForAnimation(target);
+    target.style.opacity = "1";
+    target.style.transform = "none";
+}
+
+if (typeof IntersectionObserver !== "undefined") {
+    observerAnime = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            if (hasAnime) {
+                const animationType = entry.target.getAttribute('anime-fade');
+                switch (animationType) {
+                    case 'left': startAnimeLeft(entry.target); break;
+                    case 'right': startAnimeRight(entry.target); break;
+                    case 'up': startAnimeUp(entry.target); break;
+                    case 'down': startAnimeDown(entry.target); break;
+                    default: revealAnimeFadeEl(entry.target); break;
+                }
+            } else {
+                revealAnimeFadeEl(entry.target);
             }
             observer.unobserve(entry.target);
-        }
-    });
-}, { rootMargin: '0px 0px 150px 0px', threshold: 0 });
+        });
+    }, { rootMargin: '0px 0px 150px 0px', threshold: 0 });
 
-document.querySelectorAll('[anime-fade]').forEach(el => observerAnime.observe(el));
+    document.querySelectorAll('[anime-fade]').forEach(el => observerAnime.observe(el));
+} else {
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('[anime-fade]').forEach(revealAnimeFadeEl);
+    });
+}
 
 // Function for dynamically added elements
 function observeDynamicAnimeElements() {
+    if (!observerAnime) return;
     document.querySelectorAll('[anime-fade]:not([data-observed])').forEach(element => {
         observerAnime.observe(element);
         element.setAttribute('data-observed', 'true');
@@ -132,32 +161,34 @@ function initNavAnimations() {
     const navContainer = document.querySelector('nav');
     if (!navContainer) return;
 
-    // — Nav-item animations —
     const navItems = navContainer.querySelectorAll('.animeNavItem');
-    if (navItems.length) {
-        navItems.forEach(i => prepareForAnimation(i));
-        anime({
-            targets: '.animeNavItem',
-            translateY: [-5, 0],
-            opacity: [0, 1],
-            duration: 500,
-            delay: (el, i) => 500 + 30 * i,
-        });
-    }
-    // else: silently do nothing
-
-    // — Logo animation —
     const logo = navContainer.querySelector('.animeLogo');
-    if (logo) {
-        prepareForAnimation(logo);
-        anime({
-            targets: '.animeLogo',
-            translateX: [40, 0],
-            opacity: [0, 1],
-            easing: 'easeOutExpo',
-            duration: 1000,
-            delay: 500,
-        });
+
+    if (hasAnime) {
+        if (navItems.length) {
+            navItems.forEach(i => prepareForAnimation(i));
+            anime({
+                targets: '.animeNavItem',
+                translateY: [-5, 0],
+                opacity: [0, 1],
+                duration: 500,
+                delay: (el, i) => 500 + 30 * i,
+            });
+        }
+        if (logo) {
+            prepareForAnimation(logo);
+            anime({
+                targets: '.animeLogo',
+                translateX: [40, 0],
+                opacity: [0, 1],
+                easing: 'easeOutExpo',
+                duration: 1000,
+                delay: 500,
+            });
+        }
+    } else {
+        navItems.forEach(i => prepareForAnimation(i));
+        if (logo) prepareForAnimation(logo);
     }
 }
 
@@ -178,6 +209,7 @@ function animateHeadingLetters() {
 
     textWrappers.forEach(textWrapper => {
         prepareForAnimation(textWrapper);
+        if (!hasAnime) return;
 
         anime.timeline({ loop: false })
             .add({
@@ -194,16 +226,20 @@ function animateHeadingLetters() {
 
 const slideHeading = document.querySelector('.animeSlideHeading');
 if (slideHeading) {
-    anime.timeline({ loop: false })
-        .add({
-            targets: '.animeSlideHeading',
-            translateX: [40, 0],
-            opacity: [0, 1],
-            easing: "easeOutExpo",
-            duration: 2000,
-            delay: 500,
-            begin: () => prepareForAnimation(slideHeading),
-        });
+    if (hasAnime) {
+        anime.timeline({ loop: false })
+            .add({
+                targets: '.animeSlideHeading',
+                translateX: [40, 0],
+                opacity: [0, 1],
+                easing: "easeOutExpo",
+                duration: 2000,
+                delay: 500,
+                begin: () => prepareForAnimation(slideHeading),
+            });
+    } else {
+        prepareForAnimation(slideHeading);
+    }
 }
 
 
@@ -212,6 +248,7 @@ const headingImages = document.querySelectorAll('.animeHeadingImage');
 if (headingImages.length > 0) {
     headingImages.forEach(headingImage => {
         prepareForAnimation(headingImage);
+        if (!hasAnime) return;
 
         anime.timeline({ loop: false })
             .add({
@@ -231,21 +268,25 @@ if (headingImages.length > 0) {
 
 function startAnimeLeft(target) {
     prepareForAnimation(target);
+    if (!hasAnime) return;
     anime({ targets: target, translateX: [100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
 }
 
 function startAnimeRight(target) {
     prepareForAnimation(target);
+    if (!hasAnime) return;
     anime({ targets: target, translateX: [-100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
 }
 
 function startAnimeUp(target) {
     prepareForAnimation(target);
+    if (!hasAnime) return;
     anime({ targets: target, translateY: [100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
 }
 
 function startAnimeDown(target) {
     prepareForAnimation(target);
+    if (!hasAnime) return;
     anime({ targets: target, translateY: [-100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
 }
 
@@ -261,10 +302,3 @@ function wrapTextWithSpans(selector) {
 }
 wrapTextWithSpans('.animeHeading');
 animateHeadingLetters();
-
-
-
-// Run once on full page load:
-document.addEventListener('DOMContentLoaded', initNavAnimations);
-// Run again right after nav injection:
-document.addEventListener('nav:loaded', initNavAnimations);

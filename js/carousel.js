@@ -17,6 +17,10 @@ class Carousel {
     }
 
     init() {
+        if (!this.dashesContainer) {
+            console.warn("Carousel: no .carouselDashContainer for data-carousel-id=%s", this.carouselElement.getAttribute("data-carousel-id"));
+            return;
+        }
         this.setUpDashes();
         this.showSlides(this.slideIndex);
         this.startSlideShow();
