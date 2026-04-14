@@ -1,11 +1,11 @@
+import { animate, createTimeline } from "./anime-v4.bundle.js";
+
 console.log("animations.js loaded successfully");
 
-// Resolve via globalThis so ES modules always see the UMD global from the classic anime script.
-const anime = globalThis.anime;
-const hasAnime = typeof anime === "function";
+const hasAnime = typeof animate === "function" && typeof createTimeline === "function";
 if (!hasAnime) {
     console.warn(
-        "[Marla] anime.js is not available (failed to load, wrong order, or blocked). Showing static layout; other scripts will still run."
+        "[Marla] anime.js v4 is not available (failed to load or blocked). Showing static layout; other scripts will still run."
     );
 }
 
@@ -22,11 +22,10 @@ document.addEventListener("DOMContentLoaded", function () {
     animatableElements.forEach((element) => {
         const animationProperties = getAnimationProperties(element);
 
-        const animation = anime({
-            targets: element,
+        const animation = animate(element, {
             ...animationProperties,
             autoplay: false,
-            easing: 'easeOutQuad',
+            ease: "outQuad",
         });
 
         animations.push({ element, animation });
@@ -149,6 +148,12 @@ function prepareForAnimation(element) {
     element.classList.remove('hidden-opacity');
 }
 
+/** Let tweens own opacity/transform; shared.css uses visibility:hidden on enter targets. */
+function uncoverForTween(element) {
+    if (!element) return;
+    element.style.visibility = "visible";
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Specific Animations
 ////////////////////////////////////////////////////////////////////////
@@ -166,9 +171,8 @@ function initNavAnimations() {
 
     if (hasAnime) {
         if (navItems.length) {
-            navItems.forEach(i => prepareForAnimation(i));
-            anime({
-                targets: '.animeNavItem',
+            navItems.forEach(i => uncoverForTween(i));
+            animate('.animeNavItem', {
                 translateY: [-5, 0],
                 opacity: [0, 1],
                 duration: 500,
@@ -176,12 +180,11 @@ function initNavAnimations() {
             });
         }
         if (logo) {
-            prepareForAnimation(logo);
-            anime({
-                targets: '.animeLogo',
+            uncoverForTween(logo);
+            animate('.animeLogo', {
                 translateX: [40, 0],
                 opacity: [0, 1],
-                easing: 'easeOutExpo',
+                ease: 'outExpo',
                 duration: 1000,
                 delay: 500,
             });
@@ -208,34 +211,46 @@ function animateHeadingLetters() {
     }
 
     textWrappers.forEach(textWrapper => {
-        prepareForAnimation(textWrapper);
-        if (!hasAnime) return;
+        if (!hasAnime) {
+            prepareForAnimation(textWrapper);
+            return;
+        }
 
-        anime.timeline({ loop: false })
-            .add({
-                targets: textWrapper.querySelectorAll('.animeLetter'),
+        const letters = textWrapper.querySelectorAll('.animeLetter');
+        if (!letters.length) return;
+
+        // Avoid a flash: CSS hides .animeHeading; setting opacity:1 before letters are at 0 shows full text briefly.
+        letters.forEach((span) => {
+            span.style.opacity = "0";
+            uncoverForTween(span);
+        });
+        uncoverForTween(textWrapper);
+        textWrapper.style.opacity = "1";
+
+        createTimeline({ loop: false, autoplay: true })
+            .add(letters, {
                 translateX: [40, 0],
                 translateZ: [500, 0],
                 opacity: [0, 1],
-                easing: "easeOutExpo",
+                ease: "outExpo",
                 duration: 2000,
                 delay: (el, i) => 500 + 30 * i,
             });
     });
 }
 
-const slideHeading = document.querySelector('.animeSlideHeading');
+// Whole-block slide only when letters are not used (.animeHeading gets per-letter animation below).
+const slideHeading = document.querySelector('.animeSlideHeading:not(.animeHeading)');
 if (slideHeading) {
     if (hasAnime) {
-        anime.timeline({ loop: false })
-            .add({
-                targets: '.animeSlideHeading',
+        uncoverForTween(slideHeading);
+        createTimeline({ loop: false, autoplay: true })
+            .add(slideHeading, {
                 translateX: [40, 0],
                 opacity: [0, 1],
-                easing: "easeOutExpo",
+                ease: "outExpo",
                 duration: 2000,
                 delay: 500,
-                begin: () => prepareForAnimation(slideHeading),
             });
     } else {
         prepareForAnimation(slideHeading);
@@ -247,15 +262,17 @@ if (slideHeading) {
 const headingImages = document.querySelectorAll('.animeHeadingImage');
 if (headingImages.length > 0) {
     headingImages.forEach(headingImage => {
-        prepareForAnimation(headingImage);
-        if (!hasAnime) return;
+        if (!hasAnime) {
+            prepareForAnimation(headingImage);
+            return;
+        }
+        uncoverForTween(headingImage);
 
-        anime.timeline({ loop: false })
-            .add({
-                targets: headingImage,
+        createTimeline({ loop: false, autoplay: true })
+            .add(headingImage, {
                 translateX: [-40, 0],
                 opacity: [0, 1],
-                easing: "easeOutExpo",
+                ease: "outExpo",
                 duration: 2000,
                 delay: 500,
             });
@@ -267,27 +284,39 @@ if (headingImages.length > 0) {
 ////////////////////////////////////////////////////////////////////////
 
 function startAnimeLeft(target) {
-    prepareForAnimation(target);
-    if (!hasAnime) return;
-    anime({ targets: target, translateX: [100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
+    if (!hasAnime) {
+        prepareForAnimation(target);
+        return;
+    }
+    uncoverForTween(target);
+    animate(target, { translateX: [100, 0], opacity: [0, 1], duration: 1000, ease: 'inOutSine' });
 }
 
 function startAnimeRight(target) {
-    prepareForAnimation(target);
-    if (!hasAnime) return;
-    anime({ targets: target, translateX: [-100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
+    if (!hasAnime) {
+        prepareForAnimation(target);
+        return;
+    }
+    uncoverForTween(target);
+    animate(target, { translateX: [-100, 0], opacity: [0, 1], duration: 1000, ease: 'inOutSine' });
 }
 
 function startAnimeUp(target) {
-    prepareForAnimation(target);
-    if (!hasAnime) return;
-    anime({ targets: target, translateY: [100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
+    if (!hasAnime) {
+        prepareForAnimation(target);
+        return;
+    }
+    uncoverForTween(target);
+    animate(target, { translateY: [100, 0], opacity: [0, 1], duration: 1000, ease: 'inOutSine' });
 }
 
 function startAnimeDown(target) {
-    prepareForAnimation(target);
-    if (!hasAnime) return;
-    anime({ targets: target, translateY: [-100, 0], opacity: [0, 1], duration: 1000, easing: 'easeInOutSine' });
+    if (!hasAnime) {
+        prepareForAnimation(target);
+        return;
+    }
+    uncoverForTween(target);
+    animate(target, { translateY: [-100, 0], opacity: [0, 1], duration: 1000, ease: 'inOutSine' });
 }
 
 ////////////////////////////////////////////////////////////////////////
