@@ -2,6 +2,7 @@
 console.log("modal.js loaded");
 
 import { initContactModal } from "./enquiry-modal.js";
+import { initManufacturingLocationModal } from "./manufacturing-location-modal.js";
 
 async function openModal(modalId, options = {}) {
   // Close any open modals
@@ -24,6 +25,11 @@ async function openModal(modalId, options = {}) {
   if (modalId === "modal-enquiries") {
     await initContactModal(options);
     modal = document.getElementById("modal-enquiries");
+  }
+
+  if (modalId === "modal-manufacturing-location") {
+    await initManufacturingLocationModal(options.manufacturingSlug);
+    modal = document.getElementById("modal-manufacturing-location");
   }
 
   // Show modal

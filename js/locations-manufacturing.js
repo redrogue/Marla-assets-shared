@@ -1,34 +1,31 @@
 /**
- * Strategic manufacturing locations: list ↔ detail (list, map pins, close control).
+ * Strategic manufacturing locations: list + fixed overlay (covers town names), map pins.
  */
 (function () {
     const root = document.getElementById("strategic-manufacturing");
     if (!root) return;
 
+    const overlay = root.querySelector("#loc-detail-overlay");
+    const panels = root.querySelectorAll("[data-loc-panel]");
     const items = root.querySelectorAll("[data-loc-item]");
 
     function setActive(id) {
+        const isOpen = Boolean(id);
+
+        if (overlay) {
+            overlay.classList.toggle("loc-detail-overlay--open", isOpen);
+            overlay.setAttribute("aria-hidden", String(!isOpen));
+        }
+
+        panels.forEach((panel) => {
+            const match = panel.getAttribute("data-loc-panel") === id;
+            panel.classList.toggle("hidden", !match);
+        });
+
         items.forEach((article) => {
             const locId = article.getAttribute("data-loc-item");
-            const collapsed = article.querySelector("[data-loc-collapsed]");
-            const expanded = article.querySelector("[data-loc-expanded]");
-            const isActive = Boolean(id) && locId === id;
-
-            if (collapsed) collapsed.classList.toggle("hidden", isActive);
-
-            if (expanded) {
-                if (isActive) expanded.removeAttribute("aria-hidden");
-                else expanded.setAttribute("aria-hidden", "true");
-                expanded.classList.toggle("max-h-0", !isActive);
-                expanded.classList.toggle("opacity-0", !isActive);
-                expanded.classList.toggle("pointer-events-none", !isActive);
-                expanded.classList.toggle("mb-0", !isActive);
-                expanded.classList.toggle("mb-6", isActive);
-                expanded.classList.toggle("max-h-[100rem]", isActive);
-            }
-
-            const btn = collapsed?.querySelector("button[data-loc-select]");
-            if (btn) btn.setAttribute("aria-expanded", String(isActive));
+            const btn = article.querySelector("button[data-loc-select]");
+            if (btn) btn.setAttribute("aria-expanded", String(isOpen && locId === id));
         });
 
         root.querySelectorAll(".loc-map-pin").forEach((pin) => {

@@ -245,6 +245,11 @@ dialog.modalWindow::backdrop {
   cursor: pointer;
 }
 
+/* Manufacturing hub modal: avoid scale-in animation fighting the close control; keep panel crisp */
+.modalContent.manufacturing-loc-modal-panel {
+  animation: none;
+}
+
 
 /*  ********************************************** */
 /* ***************** MAIN MENU ******************** */
@@ -390,13 +395,30 @@ dialog.modalWindow::backdrop {
   }
 }
 
-/* Strategic locations: expandable panels */
-.loc-expanded-panel {
-  transition: max-height 0.35s ease, opacity 0.28s ease, margin 0.28s ease;
+/* Strategic locations: detail overlay (covers town list, top-left of column) */
+.loc-detail-overlay {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.4s ease,
+    visibility 0.4s ease;
+}
+
+.loc-detail-overlay.loc-detail-overlay--open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Manufacturing hub modal / static page: compact hero trapezoid (same grey as .hero-trapezoid.grey) */
+.manufacturing-loc-hero {
+  height: min(52vw, 320px);
+  max-height: 360px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loc-expanded-panel {
+  .loc-detail-overlay {
     transition: none !important;
   }
 }
