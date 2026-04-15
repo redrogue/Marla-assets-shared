@@ -10,7 +10,7 @@ class Carousel {
         this.dashesContainer = document.querySelector(`.carouselDashContainer[data-dash-for-carousel="${carouselId}"]`);
         this.slideIndex = 1;
         this.slideInterval = null;
-        this.slideIntervalTime = 3000;
+        this.slideIntervalTime = 6000;
         this.progressUpdateInterval = null;
 
         this.init();
@@ -22,7 +22,8 @@ class Carousel {
             return;
         }
         this.setUpDashes();
-        this.showSlides(this.slideIndex);
+        // Skip slide-change event on first paint so hero heading letter animation can finish.
+        this.showSlides(this.slideIndex, { emitSlideChange: false });
         this.startSlideShow();
         this.addEventListeners();
     }
@@ -45,12 +46,24 @@ class Carousel {
         if (dashes[this.slideIndex - 1]) dashes[this.slideIndex - 1].className += " carouselActive";
     }
 
-    showSlides(n) {
+    showSlides(n, options = {}) {
+        const emitSlideChange = options.emitSlideChange !== false;
         if (n > this.slides.length) this.slideIndex = 1;
         if (n < 1) this.slideIndex = this.slides.length;
         Array.from(this.slides).forEach(slide => slide.style.display = "none");
-        this.slides[this.slideIndex - 1].style.display = "block";
+        const slideEl = this.slides[this.slideIndex - 1];
+        slideEl.style.display = "block";
         this.updateActiveDash();
+        if (emitSlideChange) {
+            this.carouselElement.dispatchEvent(new CustomEvent("carousel:slidechange", {
+                bubbles: true,
+                detail: {
+                    carouselId: this.carouselElement.getAttribute("data-carousel-id"),
+                    index: this.slideIndex,
+                    slideElement: slideEl,
+                },
+            }));
+        }
     }
 
     plusSlides(n) {
