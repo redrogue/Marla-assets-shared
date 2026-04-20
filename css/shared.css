@@ -7,6 +7,18 @@
     visibility: hidden;
 }
 
+@media (max-width: 1023px) {
+    .animeSlideLeft,
+    .animeSlideLeftx2,
+    .animeSlideRight,
+    .animeSlideRightx2,
+    .animeSlideDown,
+    .animeSlideUp {
+        backface-visibility: hidden;
+        will-change: transform, opacity;
+    }
+}
+
 /*test 2*/
 
 /* div { border: 1px solid red;} */

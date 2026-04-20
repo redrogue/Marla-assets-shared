@@ -19,19 +19,54 @@ document.addEventListener("DOMContentLoaded", function () {
     const animations = [];
     const triggeredOnLoad = new Set();
 
+    function measureBoxTop(el) {
+        const rect = el.getBoundingClientRect();
+        return rect.top + window.pageYOffset;
+    }
+
+    function refreshBoxTops() {
+        animations.forEach((entry) => {
+            entry.boxTop = measureBoxTop(entry.element);
+        });
+    }
+
     animatableElements.forEach((element) => {
         const animationProperties = getAnimationProperties(element);
 
         const animation = animate(element, {
             ...animationProperties,
             autoplay: false,
-            ease: "outQuad",
+            ease: "linear",
         });
 
-        animations.push({ element, animation });
+        animations.push({ element, animation, boxTop: measureBoxTop(element) });
     });
 
     triggerAnimationsOnLoad();
+
+    let resizeDebounce;
+    window.addEventListener(
+        "resize",
+        () => {
+            clearTimeout(resizeDebounce);
+            resizeDebounce = setTimeout(refreshBoxTops, 120);
+        },
+        { passive: true }
+    );
+    window.addEventListener("orientationchange", () => {
+        requestAnimationFrame(refreshBoxTops);
+    });
+    window.addEventListener("load", refreshBoxTops, { once: true });
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener(
+            "resize",
+            () => {
+                clearTimeout(resizeDebounce);
+                resizeDebounce = setTimeout(refreshBoxTops, 120);
+            },
+            { passive: true }
+        );
+    }
 
     if (typeof window.matchMedia === "function") {
         window.matchMedia("(min-width: 1024px)").addEventListener("change", recreateResponsiveSlideAnimations);
@@ -47,24 +82,28 @@ document.addEventListener("DOMContentLoaded", function () {
             const newAnim = animate(el, {
                 ...animationProperties,
                 autoplay: false,
-                ease: "outQuad",
+                ease: "linear",
             });
             newAnim.seek(newAnim.duration * prevProgress);
-            animations[index] = { element: el, animation: newAnim };
+            animations[index] = { element: el, animation: newAnim, boxTop: measureBoxTop(el) };
         });
         updateAnimations();
     }
 
     let ticking = false;
-    window.addEventListener('scroll', () => {
-        if (!ticking) {
-            requestAnimationFrame(() => {
-                updateAnimations();
-                ticking = false;
-            });
-            ticking = true;
-        }
-    });
+    window.addEventListener(
+        "scroll",
+        () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    updateAnimations();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        },
+        { passive: true }
+    );
 
     function triggerAnimationsOnLoad() {
         animations.forEach(({ element, animation }) => {
@@ -76,16 +115,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateAnimations() {
-        animations.forEach(({ element, animation }) => {
+        const viewH = window.innerHeight;
+        const y = window.scrollY;
+
+        animations.forEach(({ element, animation, boxTop }) => {
             if (triggeredOnLoad.has(element)) return;
 
-            const rect = element.getBoundingClientRect();
-            const viewH = window.innerHeight;
-            const boxTop = rect.top + window.pageYOffset;
             const startScroll = boxTop - viewH * 1.05;
             const endScroll = boxTop - viewH * 0.22;
             const span = endScroll - startScroll;
-            const y = window.scrollY;
 
             if (span <= 0) return;
             if (y >= endScroll) {
