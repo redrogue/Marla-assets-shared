@@ -33,6 +33,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     triggerAnimationsOnLoad();
 
+    if (typeof window.matchMedia === "function") {
+        window.matchMedia("(min-width: 1024px)").addEventListener("change", recreateResponsiveSlideAnimations);
+    }
+
+    function recreateResponsiveSlideAnimations() {
+        animations.forEach((entry, index) => {
+            const el = entry.element;
+            if (el.getAttribute("data-anime-slide-lg") !== "right") return;
+            const prevProgress = entry.animation.progress;
+            entry.animation.cancel();
+            const animationProperties = getAnimationProperties(el);
+            const newAnim = animate(el, {
+                ...animationProperties,
+                autoplay: false,
+                ease: "outQuad",
+            });
+            newAnim.seek(newAnim.duration * prevProgress);
+            animations[index] = { element: el, animation: newAnim };
+        });
+        updateAnimations();
+    }
+
     let ticking = false;
     window.addEventListener('scroll', () => {
         if (!ticking) {
@@ -55,18 +77,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateAnimations() {
         animations.forEach(({ element, animation }) => {
+            if (triggeredOnLoad.has(element)) return;
+
             const rect = element.getBoundingClientRect();
-            const isPartiallyInViewport = rect.top < window.innerHeight && rect.bottom > 0;
+            const viewH = window.innerHeight;
+            const boxTop = rect.top + window.pageYOffset;
+            const startScroll = boxTop - viewH * 1.05;
+            const endScroll = boxTop - viewH * 0.22;
+            const span = endScroll - startScroll;
+            const y = window.scrollY;
 
-            if (!triggeredOnLoad.has(element) && isPartiallyInViewport) {
-                const boxTop = rect.top + window.pageYOffset;
-                const startScroll = boxTop - window.innerHeight * 1.2;
-                const endScroll = boxTop + element.offsetHeight * 0.2;
-
-                if (window.scrollY > startScroll && window.scrollY < endScroll) {
-                    const scrollFraction = (window.scrollY - startScroll) / (endScroll - startScroll);
-                    animation.seek(animation.duration * scrollFraction);
-                }
+            if (span <= 0) return;
+            if (y >= endScroll) {
+                animation.seek(animation.duration);
+            } else if (y > startScroll) {
+                animation.seek(animation.duration * ((y - startScroll) / span));
+            } else {
+                animation.seek(0);
             }
         });
     }
@@ -77,6 +104,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getAnimationProperties(element) {
+        if (
+            element.getAttribute("data-anime-slide-lg") === "right" &&
+            window.matchMedia("(min-width: 1024px)").matches
+        ) {
+            return { translateX: [200, 0], opacity: [0, 1], duration: 500 };
+        }
         if (element.classList.contains('animeSlideLeft')) return { translateX: [-200, 0], opacity: [0, 1], duration: 500 };
         if (element.classList.contains('animeSlideLeftx2')) return { translateX: [400, 0], opacity: [0, 1], duration: 500 };
         if (element.classList.contains('animeSlideRight')) return { translateX: [200, 0], opacity: [0, 1], duration: 500 };
