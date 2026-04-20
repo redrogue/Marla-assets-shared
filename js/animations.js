@@ -18,6 +18,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const animatableElements = document.querySelectorAll('.animeSlideLeft, .animeSlideLeftx2, .animeSlideRight, .animeSlideRightx2, .animeSlideDown, .animeSlideUp');
     const animations = [];
     const triggeredOnLoad = new Set();
+    const xlOnlyDeferred = [];
+    const xlMinMq =
+        typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 1280px)") : null;
 
     function measureBoxTop(el) {
         const rect = el.getBoundingClientRect();
@@ -31,6 +34,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     animatableElements.forEach((element) => {
+        if (element.classList.contains("anime-slide-xl-only") && xlMinMq && !xlMinMq.matches) {
+            xlOnlyDeferred.push(element);
+            return;
+        }
         const animationProperties = getAnimationProperties(element);
 
         const animation = animate(element, {
@@ -42,6 +49,48 @@ document.addEventListener("DOMContentLoaded", function () {
         animations.push({ element, animation, boxTop: measureBoxTop(element) });
     });
 
+    function initDeferredXlOnlySilhouettes() {
+        if (!xlMinMq || !xlMinMq.matches) return;
+        let added = false;
+        xlOnlyDeferred.forEach((element) => {
+            if (animations.some((e) => e.element === element)) return;
+            const animationProperties = getAnimationProperties(element);
+            const animation = animate(element, {
+                ...animationProperties,
+                autoplay: false,
+                ease: "linear",
+            });
+            animations.push({ element, animation, boxTop: measureBoxTop(element) });
+            added = true;
+        });
+        if (added) {
+            refreshBoxTops();
+        }
+    }
+
+    function teardownXlOnlySilhouettes() {
+        for (let i = animations.length - 1; i >= 0; i--) {
+            const entry = animations[i];
+            if (!entry.element.classList.contains("anime-slide-xl-only")) continue;
+            entry.animation.cancel();
+            animations.splice(i, 1);
+            triggeredOnLoad.delete(entry.element);
+        }
+        refreshBoxTops();
+    }
+
+    if (xlMinMq) {
+        xlMinMq.addEventListener("change", (e) => {
+            if (e.matches) {
+                initDeferredXlOnlySilhouettes();
+                triggerAnimationsOnLoad();
+            } else {
+                teardownXlOnlySilhouettes();
+            }
+        });
+    }
+
+    initDeferredXlOnlySilhouettes();
     triggerAnimationsOnLoad();
 
     let resizeDebounce;
