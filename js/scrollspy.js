@@ -2,8 +2,20 @@
 console.log("scrollspy.js loaded successfully");
 
     document.addEventListener('DOMContentLoaded', function () {
-        const scrollSpySections = document.querySelectorAll('[id^="scrollSpyContent-"]');
-        const scrollSpyNavLinks = document.querySelectorAll('#scrollSpyNav-1 a');
+        const scrollSpyNavLinks = document.querySelectorAll('#scrollSpyNav-1 a[href^="#"]');
+        if (!scrollSpyNavLinks.length) return;
+
+        // Industries page: scroll-scrub timing is driven by #industries-scroll-root; nav is handled in industries-scroll-animations.js.
+        if (document.getElementById('industries-scroll-root')) return;
+
+        const hrefSections = [...scrollSpyNavLinks]
+            .map((a) => a.getAttribute('href'))
+            .filter((h) => h && h.length > 1)
+            .map((h) => document.querySelector(h))
+            .filter(Boolean);
+        const fallback = document.querySelectorAll('[id^="scrollSpyContent-"]');
+        const scrollSpySections = hrefSections.length ? hrefSections : [...fallback];
+
         let clickActive = false; // Flag to indicate active class set by click
         let scrollTimeout; // Timeout variable for debouncing
 

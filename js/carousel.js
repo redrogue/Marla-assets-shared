@@ -7,50 +7,66 @@ class Carousel {
         this.slides = this.carouselElement.getElementsByClassName("carouselSlide");
         // Find the corresponding dash container using data attributes
         const carouselId = this.carouselElement.getAttribute('data-carousel-id');
-        this.dashesContainer = document.querySelector(`.carouselDashContainer[data-dash-for-carousel="${carouselId}"]`);
+        this.dashesContainers = Array.from(document.querySelectorAll(`.carouselDashContainer[data-dash-for-carousel="${carouselId}"]`));
         this.slideIndex = 1;
         this.slideInterval = null;
-        this.slideIntervalTime = 3000;
-        this.progressUpdateInterval = null;
+        this.slideIntervalTime = 6000;
 
         this.init();
     }
 
     init() {
-        if (!this.dashesContainer) {
+        if (this.dashesContainers.length === 0) {
             console.warn("Carousel: no .carouselDashContainer for data-carousel-id=%s", this.carouselElement.getAttribute("data-carousel-id"));
             return;
         }
         this.setUpDashes();
-        this.showSlides(this.slideIndex);
+        // Skip slide-change event on first paint so hero heading letter animation can finish.
+        this.showSlides(this.slideIndex, { emitSlideChange: false });
         this.startSlideShow();
         this.addEventListeners();
     }
 
     setUpDashes() {
-        for (let i = 0; i < this.slides.length; i++) {
-            let dash = document.createElement("div");
-            dash.className = "carouselDash";
-            dash.onclick = () => this.currentSlide(i + 1);
-            let progressBar = document.createElement("div");
-            progressBar.className = "carouselProgressBar";
-            dash.appendChild(progressBar);
-            this.dashesContainer.appendChild(dash);
+        for (const container of this.dashesContainers) {
+            for (let i = 0; i < this.slides.length; i++) {
+                let dash = document.createElement("div");
+                dash.className = "carouselDash";
+                dash.onclick = () => this.currentSlide(i + 1);
+                let progressBar = document.createElement("div");
+                progressBar.className = "carouselProgressBar";
+                dash.appendChild(progressBar);
+                container.appendChild(dash);
+            }
         }
     }
 
     updateActiveDash() {
-        var dashes = this.dashesContainer.getElementsByClassName("carouselDash");
-        Array.from(dashes).forEach(dash => dash.className = "carouselDash");
-        if (dashes[this.slideIndex - 1]) dashes[this.slideIndex - 1].className += " carouselActive";
+        for (const container of this.dashesContainers) {
+            var dashes = container.getElementsByClassName("carouselDash");
+            Array.from(dashes).forEach(dash => dash.className = "carouselDash");
+            if (dashes[this.slideIndex - 1]) dashes[this.slideIndex - 1].className += " carouselActive";
+        }
     }
 
-    showSlides(n) {
+    showSlides(n, options = {}) {
+        const emitSlideChange = options.emitSlideChange !== false;
         if (n > this.slides.length) this.slideIndex = 1;
         if (n < 1) this.slideIndex = this.slides.length;
         Array.from(this.slides).forEach(slide => slide.style.display = "none");
-        this.slides[this.slideIndex - 1].style.display = "block";
+        const slideEl = this.slides[this.slideIndex - 1];
+        slideEl.style.display = "block";
         this.updateActiveDash();
+        if (emitSlideChange) {
+            this.carouselElement.dispatchEvent(new CustomEvent("carousel:slidechange", {
+                bubbles: true,
+                detail: {
+                    carouselId: this.carouselElement.getAttribute("data-carousel-id"),
+                    index: this.slideIndex,
+                    slideElement: slideEl,
+                },
+            }));
+        }
     }
 
     plusSlides(n) {
@@ -70,27 +86,24 @@ class Carousel {
 
     resetSlideShow() {
         clearInterval(this.slideInterval);
-        clearInterval(this.progressUpdateInterval);
         this.startSlideShow();
     }
 
     resetProgressBar() {
-        if (this.progressUpdateInterval) {
-            clearInterval(this.progressUpdateInterval);
-            this.progressUpdateInterval = null;
-        }
-        var dashes = this.dashesContainer.getElementsByClassName("carouselDash");
         const ms = this.slideIntervalTime;
-        Array.from(dashes).forEach((dash, idx) => {
-            let progressBar = dash.getElementsByClassName("carouselProgressBar")[0];
-            if (!progressBar) return;
-            progressBar.style.animation = "none";
-            progressBar.style.width = "0%";
-            void progressBar.offsetWidth;
-            if (idx === this.slideIndex - 1) {
-                progressBar.style.animation = `carouselProgressFill ${ms}ms linear forwards`;
-            }
-        });
+        for (const container of this.dashesContainers) {
+            const dashes = container.getElementsByClassName("carouselDash");
+            Array.from(dashes).forEach((dash, idx) => {
+                const progressBar = dash.getElementsByClassName("carouselProgressBar")[0];
+                if (!progressBar) return;
+                progressBar.style.animation = "none";
+                progressBar.style.width = "0%";
+                void progressBar.offsetWidth;
+                if (idx === this.slideIndex - 1) {
+                    progressBar.style.animation = `carouselProgressFill ${ms}ms linear forwards`;
+                }
+            });
+        }
     }
 
     addEventListeners() {

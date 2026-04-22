@@ -7,6 +7,18 @@
     visibility: hidden;
 }
 
+@media (max-width: 1023px) {
+    .animeSlideLeft,
+    .animeSlideLeftx2,
+    .animeSlideRight,
+    .animeSlideRightx2,
+    .animeSlideDown,
+    .animeSlideUp {
+        backface-visibility: hidden;
+        will-change: transform, opacity;
+    }
+}
+
 /*test 2*/
 
 /* div { border: 1px solid red;} */
@@ -22,6 +34,17 @@
   width: 100%;
   height: 500px;
   clip-path: polygon(0% 85%, 0% 0%, 100% 0%, 100% 100%);
+  z-index: 0;
+  margin-top: -1px;
+}
+
+/* Full-width rectangular hero band (same stacking as .hero-trapezoid, no clip-path) */
+.hero-bg-block {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 500px;
   z-index: 0;
   margin-top: -1px;
 }
@@ -245,6 +268,11 @@ dialog.modalWindow::backdrop {
   cursor: pointer;
 }
 
+/* Manufacturing hub modal: avoid scale-in animation fighting the close control; keep panel crisp */
+.modalContent.manufacturing-loc-modal-panel {
+  animation: none;
+}
+
 
 /*  ********************************************** */
 /* ***************** MAIN MENU ******************** */
@@ -302,24 +330,55 @@ dialog.modalWindow::backdrop {
 }
 
 
-/* Style the dashes */
+/* Inactive = outlined circles; active = solid pill + darker progress fill */
+.carouselDashContainer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .carouselDash {
-  position: relative; /* To position the progress bar inside */
+  position: relative;
   cursor: pointer;
-  height: 7px; /* Adjust height to match progress bar */
-  width: 50px; /* Width as a dash */
-  margin: 0 2px;
-  background-color: #cfcfcf; /* Default background */
-  display: inline-block;
-  transition: background-color 0.6s ease;
-  border-radius: 5px;
+  box-sizing: border-box;
+  width: 9px;
+  height: 9px;
+  margin: 0;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  background: transparent;
+  border-radius: 50%;
+  display: block;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition:
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    width 0.25s ease,
+    height 0.25s ease,
+    border-radius 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
-.carouselDash:hover, .carouselActive {
-  background-color: #aeaeae; /* Darker on hover/active */
+.carouselDash:hover:not(.carouselActive) {
+  border-color: rgba(255, 255, 255, 0.85);
 }
 
-/* The progress bar */
+.carouselDash.carouselActive {
+  width: 34px;
+  height: 9px;
+  border-radius: 9999px;
+  background-color: #fff;
+  border-color: #fff;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.carouselDash:not(.carouselActive) .carouselProgressBar {
+  opacity: 0;
+}
+
+/* Timer progress inside the active pill */
 .carouselProgressBar {
   position: absolute;
   bottom: 0;
@@ -344,6 +403,61 @@ dialog.modalWindow::backdrop {
   .carouselDash.carouselActive .carouselProgressBar {
     width: 100% !important;
     animation: none !important;
+  }
+}
+
+/* Hero copy: crossfade + slight vertical motion on carousel-driven updates */
+.hero-carousel-text-wrap {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.32s ease, transform 0.32s ease;
+}
+
+.hero-carousel-text-wrap.is-hero-text-exiting {
+  opacity: 0;
+  transform: translateY(0.5rem);
+}
+
+.hero-carousel-text-wrap.is-hero-text-enter-start {
+  opacity: 0;
+  transform: translateY(-0.45rem);
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-carousel-text-wrap,
+  .hero-carousel-text-wrap.is-hero-text-exiting,
+  .hero-carousel-text-wrap.is-hero-text-enter-start {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* Strategic locations: detail overlay (covers town list, top-left of column) */
+.loc-detail-overlay {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.4s ease,
+    visibility 0.4s ease;
+}
+
+.loc-detail-overlay.loc-detail-overlay--open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Manufacturing hub modal / static page: compact hero trapezoid (same grey as .hero-trapezoid.grey) */
+.manufacturing-loc-hero {
+  height: min(52vw, 320px);
+  max-height: 360px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loc-detail-overlay {
+    transition: none !important;
   }
 }
 

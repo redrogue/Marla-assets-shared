@@ -18,31 +18,141 @@ document.addEventListener("DOMContentLoaded", function () {
     const animatableElements = document.querySelectorAll('.animeSlideLeft, .animeSlideLeftx2, .animeSlideRight, .animeSlideRightx2, .animeSlideDown, .animeSlideUp');
     const animations = [];
     const triggeredOnLoad = new Set();
+    const xlOnlyDeferred = [];
+    const xlMinMq =
+        typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 1280px)") : null;
+
+    function measureBoxTop(el) {
+        const rect = el.getBoundingClientRect();
+        return rect.top + window.pageYOffset;
+    }
+
+    function refreshBoxTops() {
+        animations.forEach((entry) => {
+            entry.boxTop = measureBoxTop(entry.element);
+        });
+    }
 
     animatableElements.forEach((element) => {
+        if (element.classList.contains("anime-slide-xl-only") && xlMinMq && !xlMinMq.matches) {
+            xlOnlyDeferred.push(element);
+            return;
+        }
         const animationProperties = getAnimationProperties(element);
 
         const animation = animate(element, {
             ...animationProperties,
             autoplay: false,
-            ease: "outQuad",
+            ease: "linear",
         });
 
-        animations.push({ element, animation });
+        animations.push({ element, animation, boxTop: measureBoxTop(element) });
     });
 
+    function initDeferredXlOnlySilhouettes() {
+        if (!xlMinMq || !xlMinMq.matches) return;
+        let added = false;
+        xlOnlyDeferred.forEach((element) => {
+            if (animations.some((e) => e.element === element)) return;
+            const animationProperties = getAnimationProperties(element);
+            const animation = animate(element, {
+                ...animationProperties,
+                autoplay: false,
+                ease: "linear",
+            });
+            animations.push({ element, animation, boxTop: measureBoxTop(element) });
+            added = true;
+        });
+        if (added) {
+            refreshBoxTops();
+        }
+    }
+
+    function teardownXlOnlySilhouettes() {
+        for (let i = animations.length - 1; i >= 0; i--) {
+            const entry = animations[i];
+            if (!entry.element.classList.contains("anime-slide-xl-only")) continue;
+            entry.animation.cancel();
+            animations.splice(i, 1);
+            triggeredOnLoad.delete(entry.element);
+        }
+        refreshBoxTops();
+    }
+
+    if (xlMinMq) {
+        xlMinMq.addEventListener("change", (e) => {
+            if (e.matches) {
+                initDeferredXlOnlySilhouettes();
+                triggerAnimationsOnLoad();
+            } else {
+                teardownXlOnlySilhouettes();
+            }
+        });
+    }
+
+    initDeferredXlOnlySilhouettes();
     triggerAnimationsOnLoad();
 
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-        if (!ticking) {
-            requestAnimationFrame(() => {
-                updateAnimations();
-                ticking = false;
-            });
-            ticking = true;
-        }
+    let resizeDebounce;
+    window.addEventListener(
+        "resize",
+        () => {
+            clearTimeout(resizeDebounce);
+            resizeDebounce = setTimeout(refreshBoxTops, 120);
+        },
+        { passive: true }
+    );
+    window.addEventListener("orientationchange", () => {
+        requestAnimationFrame(refreshBoxTops);
     });
+    window.addEventListener("load", refreshBoxTops, { once: true });
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener(
+            "resize",
+            () => {
+                clearTimeout(resizeDebounce);
+                resizeDebounce = setTimeout(refreshBoxTops, 120);
+            },
+            { passive: true }
+        );
+    }
+
+    if (typeof window.matchMedia === "function") {
+        window.matchMedia("(min-width: 1024px)").addEventListener("change", recreateResponsiveSlideAnimations);
+    }
+
+    function recreateResponsiveSlideAnimations() {
+        animations.forEach((entry, index) => {
+            const el = entry.element;
+            if (el.getAttribute("data-anime-slide-lg") !== "right") return;
+            const prevProgress = entry.animation.progress;
+            entry.animation.cancel();
+            const animationProperties = getAnimationProperties(el);
+            const newAnim = animate(el, {
+                ...animationProperties,
+                autoplay: false,
+                ease: "linear",
+            });
+            newAnim.seek(newAnim.duration * prevProgress);
+            animations[index] = { element: el, animation: newAnim, boxTop: measureBoxTop(el) };
+        });
+        updateAnimations();
+    }
+
+    let ticking = false;
+    window.addEventListener(
+        "scroll",
+        () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    updateAnimations();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        },
+        { passive: true }
+    );
 
     function triggerAnimationsOnLoad() {
         animations.forEach(({ element, animation }) => {
@@ -54,19 +164,23 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateAnimations() {
-        animations.forEach(({ element, animation }) => {
-            const rect = element.getBoundingClientRect();
-            const isPartiallyInViewport = rect.top < window.innerHeight && rect.bottom > 0;
+        const viewH = window.innerHeight;
+        const y = window.scrollY;
 
-            if (!triggeredOnLoad.has(element) && isPartiallyInViewport) {
-                const boxTop = rect.top + window.pageYOffset;
-                const startScroll = boxTop - window.innerHeight * 1.2;
-                const endScroll = boxTop + element.offsetHeight * 0.2;
+        animations.forEach(({ element, animation, boxTop }) => {
+            if (triggeredOnLoad.has(element)) return;
 
-                if (window.scrollY > startScroll && window.scrollY < endScroll) {
-                    const scrollFraction = (window.scrollY - startScroll) / (endScroll - startScroll);
-                    animation.seek(animation.duration * scrollFraction);
-                }
+            const startScroll = boxTop - viewH * 1.05;
+            const endScroll = boxTop - viewH * 0.22;
+            const span = endScroll - startScroll;
+
+            if (span <= 0) return;
+            if (y >= endScroll) {
+                animation.seek(animation.duration);
+            } else if (y > startScroll) {
+                animation.seek(animation.duration * ((y - startScroll) / span));
+            } else {
+                animation.seek(0);
             }
         });
     }
@@ -77,6 +191,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getAnimationProperties(element) {
+        if (
+            element.getAttribute("data-anime-slide-lg") === "right" &&
+            window.matchMedia("(min-width: 1024px)").matches
+        ) {
+            return { translateX: [200, 0], opacity: [0, 1], duration: 500 };
+        }
         if (element.classList.contains('animeSlideLeft')) return { translateX: [-200, 0], opacity: [0, 1], duration: 500 };
         if (element.classList.contains('animeSlideLeftx2')) return { translateX: [400, 0], opacity: [0, 1], duration: 500 };
         if (element.classList.contains('animeSlideRight')) return { translateX: [200, 0], opacity: [0, 1], duration: 500 };
