@@ -328,7 +328,23 @@ dialog.modalWindow::backdrop {
   background: #868686; /* Progress bar color */
   width: 0%; /* Start with no progress */
   border-radius: 5px;
+  pointer-events: none;
+}
 
+@keyframes carouselProgressFill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carouselDash.carouselActive .carouselProgressBar {
+    width: 100% !important;
+    animation: none !important;
+  }
 }
 
 

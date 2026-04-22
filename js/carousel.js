@@ -75,21 +75,22 @@ class Carousel {
     }
 
     resetProgressBar() {
+        if (this.progressUpdateInterval) {
+            clearInterval(this.progressUpdateInterval);
+            this.progressUpdateInterval = null;
+        }
         var dashes = this.dashesContainer.getElementsByClassName("carouselDash");
-        Array.from(dashes).forEach(dash => {
+        const ms = this.slideIntervalTime;
+        Array.from(dashes).forEach((dash, idx) => {
             let progressBar = dash.getElementsByClassName("carouselProgressBar")[0];
-            progressBar.style.width = '0%';
-        });
-
-        this.progressUpdateInterval = setInterval(() => {
-            if (dashes[this.slideIndex - 1]) {
-                var progressBar = dashes[this.slideIndex - 1].getElementsByClassName("carouselProgressBar")[0];
-                var currentWidth = parseFloat(progressBar.style.width);
-                var increment = 100 / (this.slideIntervalTime / 100);
-                progressBar.style.width = Math.min(currentWidth + increment, 100) + '%';
-                if (progressBar.style.width === '100%') clearInterval(this.progressUpdateInterval);
+            if (!progressBar) return;
+            progressBar.style.animation = "none";
+            progressBar.style.width = "0%";
+            void progressBar.offsetWidth;
+            if (idx === this.slideIndex - 1) {
+                progressBar.style.animation = `carouselProgressFill ${ms}ms linear forwards`;
             }
-        }, 100);
+        });
     }
 
     addEventListeners() {
