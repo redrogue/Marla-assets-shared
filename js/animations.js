@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (triggeredOnLoad.has(element)) return;
 
             const startScroll = boxTop - viewH * 1.05;
-            const endScroll = boxTop - viewH * 0.22;
+            const endScroll = boxTop - viewH * 0.6;
             const span = endScroll - startScroll;
 
             if (span <= 0) return;
@@ -195,14 +195,14 @@ document.addEventListener("DOMContentLoaded", function () {
             element.getAttribute("data-anime-slide-lg") === "right" &&
             window.matchMedia("(min-width: 1024px)").matches
         ) {
-            return { translateX: [200, 0], opacity: [0, 1], duration: 500 };
+            return { translateX: [130, 0], opacity: [0, 1], duration: 500 };
         }
-        if (element.classList.contains('animeSlideLeft')) return { translateX: [-200, 0], opacity: [0, 1], duration: 500 };
-        if (element.classList.contains('animeSlideLeftx2')) return { translateX: [400, 0], opacity: [0, 1], duration: 500 };
-        if (element.classList.contains('animeSlideRight')) return { translateX: [200, 0], opacity: [0, 1], duration: 500 };
-        if (element.classList.contains('animeSlideRightx2')) return { translateX: [400, 0], opacity: [0, 1], duration: 500 };
-        if (element.classList.contains('animeSlideDown')) return { translateY: [-200, 0], opacity: [0, 1], duration: 500 };
-        if (element.classList.contains('animeSlideUp')) return { translateY: [200, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideLeft')) return { translateX: [-130, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideLeftx2')) return { translateX: [265, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideRight')) return { translateX: [130, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideRightx2')) return { translateX: [265, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideDown')) return { translateY: [-130, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideUp')) return { translateY: [130, 0], opacity: [0, 1], duration: 500 };
         return {};
     }
 });
