@@ -2,7 +2,14 @@
 console.log("modal.js loaded");
 
 import { initContactModal } from "./enquiry-modal.js";
-import { initManufacturingLocationModal } from "./manufacturing-location-modal.js";
+import {
+  bindManufacturingModalClose,
+  initManufacturingLocationModal,
+  MANUFACTURING_MODAL_ID,
+} from "./manufacturing-location-modal.js";
+
+let manufacturingModalHistoryActive = false;
+let suppressManufacturingPopstate = false;
 
 async function openModal(modalId, options = {}) {
   // Close any open modals
@@ -27,9 +34,10 @@ async function openModal(modalId, options = {}) {
     modal = document.getElementById("modal-enquiries");
   }
 
-  if (modalId === "modal-manufacturing-location") {
+  if (modalId === MANUFACTURING_MODAL_ID) {
     await initManufacturingLocationModal(options.manufacturingSlug);
-    modal = document.getElementById("modal-manufacturing-location");
+    modal = document.getElementById(MANUFACTURING_MODAL_ID);
+    bindManufacturingModalClose(modal);
   }
 
   // Show modal
@@ -46,6 +54,11 @@ async function openModal(modalId, options = {}) {
       // Clear inline display so CSS can take over; legacy code may set it
       modal.style.display = "";
     }
+
+    if (modalId === MANUFACTURING_MODAL_ID && !manufacturingModalHistoryActive) {
+      history.pushState({ steadfastManufacturingModal: true }, "");
+      manufacturingModalHistoryActive = true;
+    }
   }
 
   document.body.classList.add("overflow-hidden");
@@ -54,6 +67,9 @@ async function openModal(modalId, options = {}) {
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
+
+  const syncManufacturingHistory =
+    modalId === MANUFACTURING_MODAL_ID && manufacturingModalHistoryActive;
 
   // Call reset function if it exists (for enquiry modal)
   if (modal._resetForm && typeof modal._resetForm === "function") {
@@ -72,12 +88,29 @@ function closeModal(modalId) {
   }
 
   document.body.classList.remove("overflow-hidden");
+
+  if (syncManufacturingHistory) {
+    manufacturingModalHistoryActive = false;
+    suppressManufacturingPopstate = true;
+    history.back();
+    suppressManufacturingPopstate = false;
+  }
 }
 
 window.openModal = openModal;
 window.closeModal = closeModal;
 
 window.addEventListener("click", e => {
+  const manufacturingClose = e.target.closest(
+    `#${MANUFACTURING_MODAL_ID} .manufacturing-loc-modal-close, #${MANUFACTURING_MODAL_ID} .modalClose`
+  );
+  if (manufacturingClose) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeModal(MANUFACTURING_MODAL_ID);
+    return;
+  }
+
   const modalEl = e.target.classList.contains("modalWindow") ? e.target : e.target.closest(".modalWindow");
   if (!modalEl) return;
 
@@ -85,4 +118,12 @@ window.addEventListener("click", e => {
     if (modalEl.id === "modal-enquiries") return;
     closeModal(modalEl.id);
   }
+});
+
+window.addEventListener("popstate", () => {
+  if (suppressManufacturingPopstate) return;
+  const modal = document.getElementById(MANUFACTURING_MODAL_ID);
+  if (!modal?.classList.contains("is-open")) return;
+  manufacturingModalHistoryActive = false;
+  closeModal(MANUFACTURING_MODAL_ID);
 });

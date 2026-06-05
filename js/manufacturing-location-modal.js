@@ -3,6 +3,24 @@
 //
 // openModal('modal-manufacturing-location', { manufacturingSlug: 'manchester' })
 
+export const MANUFACTURING_MODAL_ID = "modal-manufacturing-location";
+
+/** Wire close/back controls to dismiss the overlay only (never navigate away). */
+export function bindManufacturingModalClose(modal) {
+  if (!modal) return;
+  modal.querySelectorAll(".manufacturing-loc-modal-close, .modalClose").forEach((btn) => {
+    if (btn.dataset.bound === "true") return;
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof window.closeModal === "function") {
+        window.closeModal(MANUFACTURING_MODAL_ID);
+      }
+    });
+    btn.dataset.bound = "true";
+  });
+}
+
 export async function initManufacturingLocationModal(slug) {
   const id = String(slug || "").trim();
   if (!id) {
@@ -39,13 +57,5 @@ export async function initManufacturingLocationModal(slug) {
   }
 
   modal.innerHTML = injectHtml;
-
-  const closeBtn = modal.querySelector(".modalClose");
-  if (closeBtn) {
-    closeBtn.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      window.closeModal("modal-manufacturing-location");
-    };
-  }
+  bindManufacturingModalClose(modal);
 }
