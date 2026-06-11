@@ -26,10 +26,10 @@ function rewriteModalAssetPaths(html) {
 
 function resolveManufacturingModalUrl(slug) {
   const root = resolveSiteRoot();
-  return `${window.location.origin}${root}_modal-${slug}.html`;
+  return `${window.location.origin}${root}modal-hub-${slug}.html`;
 }
 
-/** After redirect from a standalone _modal-*.html preview URL, open the overlay on index. */
+/** After redirect from a standalone modal-hub-*.html preview URL, open the overlay on index. */
 export function openPendingManufacturingModalFromRedirect() {
   const slug = sessionStorage.getItem(PENDING_SLUG_KEY);
   if (!slug) return;
