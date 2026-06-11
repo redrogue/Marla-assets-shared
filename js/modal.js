@@ -6,6 +6,7 @@ import {
   bindManufacturingModalClose,
   initManufacturingLocationModal,
   MANUFACTURING_MODAL_ID,
+  openPendingManufacturingModalFromRedirect,
 } from "./manufacturing-location-modal.js";
 
 let manufacturingModalHistoryActive = false;
@@ -99,6 +100,12 @@ function closeModal(modalId) {
 
 window.openModal = openModal;
 window.closeModal = closeModal;
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", openPendingManufacturingModalFromRedirect);
+} else {
+  openPendingManufacturingModalFromRedirect();
+}
 
 window.addEventListener("click", e => {
   const manufacturingClose = e.target.closest(
