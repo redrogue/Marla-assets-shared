@@ -19,7 +19,14 @@ function resolveSiteRoot() {
 /** Injected modal HTML uses paths relative to the page URL; rewrite to site root. */
 function rewriteModalAssetPaths(html) {
   const root = resolveSiteRoot();
-  return html.replace(/src=(["'])\.\/img\//g, `src=$1${root}img/`);
+  return html
+    .replace(/src=(["'])\.\/img\//g, `src=$1${root}img/`)
+    .replace(/src=(["'])\/img\//g, `src=$1${root}img/`);
+}
+
+function resolveManufacturingModalUrl(slug) {
+  const root = resolveSiteRoot();
+  return `${window.location.origin}${root}_modal-${slug}.html`;
 }
 
 /** After redirect from a standalone _modal-*.html preview URL, open the overlay on index. */
@@ -63,9 +70,7 @@ export async function initManufacturingLocationModal(slug) {
     document.body.appendChild(modal);
   }
 
-  const scriptEl = document.querySelector('script[src*="index.js"]');
-  const baseUrl = scriptEl ? scriptEl.src : window.location.href;
-  const modalUrl = new URL(`../_modal-${id}.html`, baseUrl).href;
+  const modalUrl = resolveManufacturingModalUrl(id);
   let injectHtml;
   try {
     const res = await fetch(`${modalUrl}?v=${Date.now()}`, { cache: "no-store" });
