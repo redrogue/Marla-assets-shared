@@ -25,7 +25,7 @@ function syncHeroFromSlide(slideElement) {
 
     const apply = (headingEl, subEl) => {
         if (!headingEl || !subEl) return;
-        if (heroHeading !== undefined) headingEl.textContent = heroHeading;
+        if (heroHeading !== undefined) headingEl.innerHTML = heroHeading;
         if (heroSubhtml !== undefined) subEl.innerHTML = heroSubhtml;
     };
 

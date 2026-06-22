@@ -442,11 +442,27 @@ function startAnimeDown(target) {
 ////////////////////////////////////////////////////////////////////////
 // Text Wrapping for Headings
 ////////////////////////////////////////////////////////////////////////
+function wrapLettersInText(text) {
+    return text.replace(/\S/g, "<span class='animeLetter'>$&</span>");
+}
+
+function wrapHeadingHtmlWithLetterSpans(html) {
+    if (!/<br\s*\/?>/i.test(html)) return wrapLettersInText(html.trim());
+    return html
+        .split(/<br\s*\/?>/i)
+        .map((line) => {
+            const text = line.trim();
+            return text ? wrapLettersInText(text) : "";
+        })
+        .join("<br>");
+}
+
 function wrapTextWithSpans(selector) {
     const elements = document.querySelectorAll(selector);
-    elements.forEach(el => {
-        if (!el.textContent.trim()) return;
-        el.innerHTML = el.textContent.replace(/\S/g, "<span class='animeLetter'>$&</span>");
+    elements.forEach((el) => {
+        const html = el.innerHTML.trim();
+        if (!html) return;
+        el.innerHTML = wrapHeadingHtmlWithLetterSpans(html);
     });
 }
 wrapTextWithSpans('.animeHeading');
