@@ -5,7 +5,7 @@ const HINT_ID = "industries-strip-hint";
 const XL_MAX = "(max-width: 1279px)";
 const NUDGE_PX = 25;
 const NUDGE_DELAY_MS = 600;
-const DRAG_THRESHOLD_PX = 5;
+const AXIS_LOCK_PX = 8;
 const hasAnime = typeof animate === "function";
 
 function initIndustriesStripScrollSync() {
@@ -79,51 +79,73 @@ function initIndustriesStripScrollSync() {
         e.stopPropagation();
     }
 
+    function resetDragState() {
+        if (!dragState) return;
+        if (dragState.captured) {
+            strip.releasePointerCapture(dragState.pointerId);
+        }
+        strip.classList.remove("is-dragging");
+        dragState = null;
+    }
+
     function onPointerDown(e) {
         if (getMaxScroll() <= 0) return;
+        if (e.pointerType === "touch") return;
         if (e.pointerType === "mouse" && e.button !== 0) return;
 
         dragState = {
             pointerId: e.pointerId,
             startX: e.clientX,
+            startY: e.clientY,
             startScrollLeft: strip.scrollLeft,
             moved: false,
+            captured: false,
+            axis: null,
         };
-        strip.setPointerCapture(e.pointerId);
     }
 
     function onPointerMove(e) {
         if (!dragState || dragState.pointerId !== e.pointerId) return;
 
         const dx = e.clientX - dragState.startX;
-        if (!dragState.moved) {
-            if (Math.abs(dx) < DRAG_THRESHOLD_PX) return;
-            dragState.moved = true;
+        const dy = e.clientY - dragState.startY;
+
+        if (!dragState.axis) {
+            const absDx = Math.abs(dx);
+            const absDy = Math.abs(dy);
+            if (absDx < AXIS_LOCK_PX && absDy < AXIS_LOCK_PX) return;
+
+            if (absDy >= absDx) {
+                resetDragState();
+                return;
+            }
+
+            dragState.axis = "x";
+            dragState.captured = true;
+            strip.setPointerCapture(e.pointerId);
             strip.classList.add("is-dragging");
         }
 
+        if (dragState.axis !== "x") return;
+
         e.preventDefault();
+        dragState.moved = true;
         strip.scrollLeft = dragState.startScrollLeft - dx;
     }
 
     function onPointerUp(e) {
         if (!dragState || dragState.pointerId !== e.pointerId) return;
 
-        strip.releasePointerCapture(e.pointerId);
-        strip.classList.remove("is-dragging");
-
         if (dragState.moved) {
             strip.addEventListener("click", suppressClickAfterDrag, { capture: true, once: true });
         }
 
-        dragState = null;
+        resetDragState();
     }
 
     function onPointerCancel(e) {
         if (!dragState || dragState.pointerId !== e.pointerId) return;
-        strip.releasePointerCapture(e.pointerId);
-        strip.classList.remove("is-dragging");
-        dragState = null;
+        resetDragState();
     }
 
     function teardownObserver() {
@@ -156,11 +178,7 @@ function initIndustriesStripScrollSync() {
     }
 
     function detachDrag() {
-        if (dragState) {
-            strip.releasePointerCapture(dragState.pointerId);
-            dragState = null;
-        }
-        strip.classList.remove("is-dragging");
+        resetDragState();
         strip.removeEventListener("pointerdown", onPointerDown);
         strip.removeEventListener("pointermove", onPointerMove);
         strip.removeEventListener("pointerup", onPointerUp);
