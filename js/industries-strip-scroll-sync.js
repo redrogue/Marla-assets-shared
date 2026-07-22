@@ -1,213 +1,245 @@
+import { animate } from "./anime-v4.bundle.js";
+
 const STRIP_ID = "industries-strip-scroller";
+const HINT_ID = "industries-strip-hint";
 const XL_MAX = "(max-width: 1279px)";
-/** Softens mouse wheel steps (less twitchy than 1:1 raw delta) */
-const WHEEL_SCALE = 0.62;
-const TOUCH_SCALE = 0.95;
+const NUDGE_PX = 25;
+const NUDGE_DELAY_MS = 600;
+const DRAG_THRESHOLD_PX = 5;
+const hasAnime = typeof animate === "function";
 
 function initIndustriesStripScrollSync() {
     const strip = document.getElementById(STRIP_ID);
     if (!strip) return;
 
+    const hint = document.getElementById(HINT_ID);
     const mq = window.matchMedia(XL_MAX);
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let scrollRaf = 0;
-    let startScrollY = 0;
-    let touchLastY = null;
 
-    let pendingPan = 0;
-    let panFlushRaf = 0;
+    let nudgePlayed = false;
+    let nudgeTimer = 0;
+    let observer = null;
+    let dragState = null;
 
     function getMaxScroll() {
-        return strip.scrollWidth - strip.clientWidth;
+        return Math.max(0, strip.scrollWidth - strip.clientWidth);
     }
 
-    function normalizeWheelDelta(e) {
-        let dy = e.deltaY + e.deltaX;
-        if (e.deltaMode === 1) dy *= 16;
-        else if (e.deltaMode === 2) dy *= window.innerHeight;
-        return dy;
+    function hideHint() {
+        if (!hint || hint.hidden) return;
+        hint.hidden = true;
+        hint.setAttribute("aria-hidden", "true");
     }
 
-    function schedulePanFlush() {
-        if (panFlushRaf) return;
-        panFlushRaf = requestAnimationFrame(() => {
-            panFlushRaf = 0;
-            const ms = getMaxScroll();
-            if (ms <= 0 || pendingPan === 0) return;
-            strip.scrollLeft = Math.max(0, Math.min(ms, strip.scrollLeft + pendingPan));
-            pendingPan = 0;
-        });
+    function showHint() {
+        if (!hint || getMaxScroll() <= 0) return;
+        hint.hidden = false;
+        hint.removeAttribute("aria-hidden");
     }
 
-    function refreshLayout() {
-        const stripRect = strip.getBoundingClientRect();
-        const stripTopDoc = stripRect.top + window.scrollY;
-        const stripBottomDoc = stripTopDoc + strip.offsetHeight;
-        startScrollY = stripBottomDoc - window.innerHeight;
+    function clearNudgeTimer() {
+        if (!nudgeTimer) return;
+        window.clearTimeout(nudgeTimer);
+        nudgeTimer = 0;
     }
 
-    function lockAndResetFromScroll() {
-        if (!mq.matches || reduceMotion.matches) return;
-        const ms = getMaxScroll();
-        if (ms <= 0) return;
-        const y = window.scrollY;
-        const sl = strip.scrollLeft;
+    function playNudge() {
+        if (nudgePlayed || !mq.matches || reduceMotion.matches) return;
+        const max = getMaxScroll();
+        if (max <= 0) return;
+        nudgePlayed = true;
 
-        if (y < startScrollY && sl > 0) {
-            strip.scrollLeft = 0;
-        }
-        if (y > startScrollY + 0.5 && sl < ms - 0.5) {
-            window.scrollTo(0, startScrollY);
-        }
-    }
+        const nudgeTarget = Math.min(NUDGE_PX, max);
 
-    function onScroll() {
-        cancelAnimationFrame(scrollRaf);
-        scrollRaf = requestAnimationFrame(lockAndResetFromScroll);
-    }
-
-    function onWheel(e) {
-        if (!mq.matches || reduceMotion.matches) return;
-        const ms = getMaxScroll();
-        if (ms <= 0) return;
-
-        const y = window.scrollY;
-        const sl = strip.scrollLeft;
-        const dy = normalizeWheelDelta(e) * WHEEL_SCALE;
-
-        if (y < startScrollY - 2) {
-            return;
-        }
-
-        if (sl >= ms - 1) {
-            if (y > startScrollY + 2) {
-                return;
-            }
-            if (y <= startScrollY + 2 && dy < 0 && sl > 0) {
-                e.preventDefault();
-                pendingPan += dy;
-                schedulePanFlush();
-            }
-            return;
-        }
-
-        if (y >= startScrollY - 2 && sl < ms - 1) {
-            if (sl === 0 && dy < 0) {
-                return;
-            }
-            e.preventDefault();
-            if (y > startScrollY) {
-                window.scrollTo(0, startScrollY);
-            }
-            pendingPan += dy;
-            schedulePanFlush();
+        if (hasAnime) {
+            animate(strip, {
+                scrollLeft: [0, nudgeTarget, 0],
+                duration: 1200,
+                ease: "inOutSine",
+            });
+        } else {
+            strip.scrollLeft = nudgeTarget;
+            window.setTimeout(() => {
+                strip.scrollLeft = 0;
+            }, 600);
         }
     }
 
-    function onTouchStart(e) {
-        if (!mq.matches || reduceMotion.matches) return;
-        if (e.touches.length !== 1) return;
-        touchLastY = e.touches[0].clientY;
+    function scheduleNudge() {
+        clearNudgeTimer();
+        if (nudgePlayed || !mq.matches || reduceMotion.matches || getMaxScroll() <= 0) return;
+        nudgeTimer = window.setTimeout(() => {
+            nudgeTimer = 0;
+            playNudge();
+        }, NUDGE_DELAY_MS);
     }
 
-    function onTouchMove(e) {
-        if (!mq.matches || reduceMotion.matches) return;
-        if (e.touches.length !== 1 || touchLastY === null) return;
-
-        const ms = getMaxScroll();
-        if (ms <= 0) return;
-
-        const y = window.scrollY;
-        const sl = strip.scrollLeft;
-        const touch = e.touches[0];
-        const dy = (touchLastY - touch.clientY) * TOUCH_SCALE;
-        touchLastY = touch.clientY;
-
-        if (y < startScrollY - 2) {
-            return;
-        }
-
-        if (sl >= ms - 1) {
-            if (y > startScrollY + 2) {
-                return;
-            }
-            if (y <= startScrollY + 2 && dy < 0 && sl > 0) {
-                e.preventDefault();
-                pendingPan += dy;
-                schedulePanFlush();
-            }
-            return;
-        }
-
-        if (y >= startScrollY - 2 && sl < ms - 1) {
-            if (sl === 0 && dy < 0) {
-                return;
-            }
-            e.preventDefault();
-            if (y > startScrollY) {
-                window.scrollTo(0, startScrollY);
-            }
-            pendingPan += dy;
-            schedulePanFlush();
-        }
+    function suppressClickAfterDrag(e) {
+        e.preventDefault();
+        e.stopPropagation();
     }
 
-    function onResize() {
-        refreshLayout();
+    function onPointerDown(e) {
+        if (getMaxScroll() <= 0) return;
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+
+        dragState = {
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startScrollLeft: strip.scrollLeft,
+            moved: false,
+        };
+        strip.setPointerCapture(e.pointerId);
+    }
+
+    function onPointerMove(e) {
+        if (!dragState || dragState.pointerId !== e.pointerId) return;
+
+        const dx = e.clientX - dragState.startX;
+        if (!dragState.moved) {
+            if (Math.abs(dx) < DRAG_THRESHOLD_PX) return;
+            dragState.moved = true;
+            strip.classList.add("is-dragging");
+        }
+
+        e.preventDefault();
+        strip.scrollLeft = dragState.startScrollLeft - dx;
+    }
+
+    function onPointerUp(e) {
+        if (!dragState || dragState.pointerId !== e.pointerId) return;
+
+        strip.releasePointerCapture(e.pointerId);
+        strip.classList.remove("is-dragging");
+
+        if (dragState.moved) {
+            strip.addEventListener("click", suppressClickAfterDrag, { capture: true, once: true });
+        }
+
+        dragState = null;
+    }
+
+    function onPointerCancel(e) {
+        if (!dragState || dragState.pointerId !== e.pointerId) return;
+        strip.releasePointerCapture(e.pointerId);
+        strip.classList.remove("is-dragging");
+        dragState = null;
+    }
+
+    function teardownObserver() {
+        if (!observer) return;
+        observer.disconnect();
+        observer = null;
+    }
+
+    function setupObserver() {
+        teardownObserver();
+        if (!mq.matches || getMaxScroll() <= 0) return;
+
+        observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
+                        scheduleNudge();
+                        teardownObserver();
+                    }
+                });
+            },
+            { threshold: [0, 0.35, 0.5] }
+        );
+        observer.observe(strip);
+    }
+
+    function detachMobileHint() {
+        clearNudgeTimer();
+        teardownObserver();
+    }
+
+    function detachDrag() {
+        if (dragState) {
+            strip.releasePointerCapture(dragState.pointerId);
+            dragState = null;
+        }
+        strip.classList.remove("is-dragging");
+        strip.removeEventListener("pointerdown", onPointerDown);
+        strip.removeEventListener("pointermove", onPointerMove);
+        strip.removeEventListener("pointerup", onPointerUp);
+        strip.removeEventListener("pointercancel", onPointerCancel);
     }
 
     function detach() {
-        cancelAnimationFrame(scrollRaf);
-        cancelAnimationFrame(panFlushRaf);
-        pendingPan = 0;
-        panFlushRaf = 0;
-        window.removeEventListener("scroll", onScroll);
-        window.removeEventListener("wheel", onWheel);
-        document.removeEventListener("touchstart", onTouchStart);
-        document.removeEventListener("touchmove", onTouchMove);
+        detachMobileHint();
+        detachDrag();
         window.removeEventListener("resize", onResize);
         if (window.visualViewport) {
             window.visualViewport.removeEventListener("resize", onResize);
         }
     }
 
-    function applyMode() {
-        detach();
-        strip.style.overflowX = "";
+    function attachDrag() {
+        strip.addEventListener("pointerdown", onPointerDown);
+        strip.addEventListener("pointermove", onPointerMove);
+        strip.addEventListener("pointerup", onPointerUp);
+        strip.addEventListener("pointercancel", onPointerCancel);
+    }
 
-        if (reduceMotion.matches) {
-            strip.style.overflowX = "auto";
-            strip.scrollLeft = 0;
+    function attachMobileHint() {
+        if (!mq.matches) {
+            hideHint();
             return;
         }
+
+        if (getMaxScroll() <= 0) {
+            hideHint();
+            return;
+        }
+
+        showHint();
+        setupObserver();
+    }
+
+    function onResize() {
+        strip.style.overflowX = getMaxScroll() > 0 ? "auto" : "";
+
         if (mq.matches) {
-            strip.style.overflowX = "hidden";
-            refreshLayout();
-            requestAnimationFrame(() => {
-                refreshLayout();
-                lockAndResetFromScroll();
-            });
-            window.addEventListener("scroll", onScroll, { passive: true });
-            window.addEventListener("wheel", onWheel, { passive: false });
-            document.addEventListener("touchstart", onTouchStart, { passive: true });
-            document.addEventListener("touchmove", onTouchMove, { passive: false });
-            window.addEventListener("resize", onResize, { passive: true });
-            if (window.visualViewport) {
-                window.visualViewport.addEventListener("resize", onResize, { passive: true });
+            if (getMaxScroll() <= 0) {
+                hideHint();
+                clearNudgeTimer();
+                teardownObserver();
+                return;
             }
+            showHint();
+            if (!nudgePlayed) setupObserver();
         } else {
-            strip.scrollLeft = 0;
+            hideHint();
+            clearNudgeTimer();
+            teardownObserver();
+        }
+    }
+
+    function applyMode() {
+        detach();
+        strip.scrollLeft = 0;
+        nudgePlayed = false;
+        strip.style.overflowX = getMaxScroll() > 0 ? "auto" : "";
+
+        attachDrag();
+        attachMobileHint();
+
+        window.addEventListener("resize", onResize, { passive: true });
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener("resize", onResize, { passive: true });
         }
     }
 
     mq.addEventListener("change", applyMode);
     reduceMotion.addEventListener("change", applyMode);
     applyMode();
+
     window.addEventListener(
         "load",
         () => {
-            refreshLayout();
-            lockAndResetFromScroll();
+            onResize();
         },
         { once: true }
     );
