@@ -523,3 +523,56 @@ dialog.modalWindow::backdrop {
   }
 }
 
+.customer-logos-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+.customer-logos-marquee__track {
+  display: flex;
+  width: max-content;
+  animation: customer-logos-marquee 28s linear infinite;
+}
+
+.customer-logos-marquee:hover .customer-logos-marquee__track {
+  animation-play-state: paused;
+}
+
+.customer-logos-marquee__group {
+  display: flex;
+  shrink: 0;
+  align-items: center;
+  gap: 3rem;
+  padding-right: 3rem;
+}
+
+@media (min-width: 640px) {
+  .customer-logos-marquee__group {
+    gap: 5rem;
+    padding-right: 5rem;
+  }
+}
+
+@keyframes customer-logos-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customer-logos-marquee {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .customer-logos-marquee__track {
+    animation: none;
+  }
+}
+
