@@ -268,11 +268,6 @@ dialog.modalWindow::backdrop {
   cursor: pointer;
 }
 
-/* Manufacturing hub modal: avoid scale-in animation fighting the close control; keep panel crisp */
-.modalContent.manufacturing-loc-modal-panel {
-  animation: none;
-}
-
 
 /*  ********************************************** */
 /* ***************** MAIN MENU ******************** */
@@ -430,96 +425,6 @@ dialog.modalWindow::backdrop {
   .hero-carousel-text-wrap.is-hero-text-enter-start {
     transition: none !important;
     transform: none !important;
-  }
-}
-
-/* Strategic locations: detail overlay (covers town list, top-left of column) */
-.loc-detail-overlay {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition:
-    opacity 0.4s ease,
-    visibility 0.4s ease;
-}
-
-.loc-detail-overlay.loc-detail-overlay--open {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-/* Manufacturing hub modal / static page: compact hero trapezoid (same grey as .hero-trapezoid.grey) */
-.manufacturing-loc-hero {
-  height: min(52vw, 320px);
-  max-height: 360px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loc-detail-overlay {
-    transition: none !important;
-  }
-}
-
-#industries-strip-scroller.is-dragging {
-  cursor: grabbing;
-}
-
-#industries-strip-scroller.is-dragging a {
-  pointer-events: none;
-}
-
-@media (max-width: 1279px) {
-  #industries-strip-scroller {
-    scrollbar-width: none;
-  }
-
-  #industries-strip-scroller::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-#industries-strip-hint {
-  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
-}
-
-#industries-strip-hint[hidden] {
-  display: none;
-}
-
-@keyframes industries-hint-chevron {
-  0%, 100% {
-    opacity: 0.25;
-    transform: translateX(0);
-  }
-
-  40%, 60% {
-    opacity: 1;
-    transform: translateX(4px);
-  }
-}
-
-.industries-scroll-hint__chevron {
-  animation: industries-hint-chevron 1.35s ease-in-out infinite;
-}
-
-.industries-scroll-hint__chevron:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.industries-scroll-hint__chevron:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.industries-scroll-hint__chevron:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .industries-scroll-hint__chevron {
-    animation: none;
-    opacity: 1;
-    transform: none;
   }
 }
 
