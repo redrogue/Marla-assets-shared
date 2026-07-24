@@ -7,14 +7,21 @@ import {
   initManufacturingLocationModal,
   MANUFACTURING_MODAL_ID,
   openPendingManufacturingModalFromRedirect,
+  showManufacturingModalLoading,
 } from "./manufacturing-location-modal.js";
 
 let manufacturingModalHistoryActive = false;
 let suppressManufacturingPopstate = false;
+let manufacturingOpenSeq = 0;
 
 async function openModal(modalId, options = {}) {
-  // Close any open modals
+  const openingManufacturing = modalId === MANUFACTURING_MODAL_ID;
+  const manufacturingSeq = openingManufacturing ? ++manufacturingOpenSeq : 0;
+
+  // Close any open modals (keep manufacturing shell when refreshing the same overlay)
   document.querySelectorAll(".modalWindow").forEach(m => {
+    if (openingManufacturing && m.id === MANUFACTURING_MODAL_ID) return;
+
     const isDialog = m.tagName?.toLowerCase() === "dialog";
     if (isDialog) {
       // Properly close and clear inline styles so CSS can control visibility
@@ -35,8 +42,14 @@ async function openModal(modalId, options = {}) {
     modal = document.getElementById("modal-enquiries");
   }
 
-  if (modalId === MANUFACTURING_MODAL_ID) {
-    await initManufacturingLocationModal(options.manufacturingSlug);
+  if (openingManufacturing) {
+    showManufacturingModalLoading();
+    const loaded = await initManufacturingLocationModal(options.manufacturingSlug);
+    if (manufacturingSeq !== manufacturingOpenSeq) return;
+    if (!loaded) {
+      closeModal(MANUFACTURING_MODAL_ID);
+      return;
+    }
     modal = document.getElementById(MANUFACTURING_MODAL_ID);
     bindManufacturingModalClose(modal);
   }
@@ -100,6 +113,14 @@ function closeModal(modalId) {
 
 window.openModal = openModal;
 window.closeModal = closeModal;
+
+const queuedModals = window.__steadfastModalQueue;
+if (Array.isArray(queuedModals) && queuedModals.length) {
+  window.__steadfastModalQueue = [];
+  queuedModals.forEach(([id, opts]) => {
+    openModal(id, opts);
+  });
+}
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", openPendingManufacturingModalFromRedirect);
