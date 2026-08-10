@@ -447,14 +447,41 @@ function wrapLettersInText(text) {
 }
 
 function wrapHeadingHtmlWithLetterSpans(html) {
-    if (!/<br\s*\/?>/i.test(html)) return wrapLettersInText(html.trim());
-    return html
-        .split(/<br\s*\/?>/i)
-        .map((line) => {
-            const text = line.trim();
-            return text ? wrapLettersInText(text) : "";
-        })
-        .join("<br>");
+    const trimmed = html.trim();
+    if (!trimmed) return trimmed;
+
+    // Plain text only — safe to run the letter regex on the whole string.
+    if (!/<[a-z][^>]*>/i.test(trimmed)) {
+        if (!/<br\s*\/?>/i.test(trimmed)) return wrapLettersInText(trimmed);
+        return trimmed
+            .split(/<br\s*\/?>/i)
+            .map((line) => {
+                const text = line.trim();
+                return text ? wrapLettersInText(text) : "";
+            })
+            .join("<br>");
+    }
+
+    // Inline markup (e.g. styled spans) — wrap text nodes only so tags are not escaped.
+    const container = document.createElement("div");
+    container.innerHTML = trimmed;
+
+    const textNodes = [];
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+        textNodes.push(node);
+    }
+
+    textNodes.forEach((textNode) => {
+        const temp = document.createElement("span");
+        temp.innerHTML = wrapLettersInText(textNode.textContent);
+        const fragment = document.createDocumentFragment();
+        while (temp.firstChild) fragment.appendChild(temp.firstChild);
+        textNode.replaceWith(fragment);
+    });
+
+    return container.innerHTML;
 }
 
 function wrapTextWithSpans(selector) {
