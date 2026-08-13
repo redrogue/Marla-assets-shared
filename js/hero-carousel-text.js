@@ -1,6 +1,7 @@
 /**
- * Keeps hero heading / subcopy in sync with #carouselContainer1 slides.
- * Copy is read from each slide's data-hero-heading and data-hero-subhtml attributes.
+ * Keeps hero heading / subcopy / CTA in sync with #carouselContainer1 slides.
+ * Copy is read from each slide's data-hero-heading, data-hero-subhtml,
+ * data-hero-button-href, and data-hero-button-label attributes.
  */
 const HERO_CAROUSEL_ID = "1";
 const HERO_TEXT_WRAP_ID = "heroCarouselTextWrap";
@@ -19,6 +20,14 @@ function syncHeroPreviewStripImg(slideElement) {
     if (previewImg.getAttribute("src") !== nextSrc) previewImg.setAttribute("src", nextSrc);
 }
 
+function syncHeroButton(slideElement) {
+    const btn = document.getElementById("heroCarouselButton");
+    if (!btn || !slideElement?.dataset) return;
+    const { heroButtonHref, heroButtonLabel } = slideElement.dataset;
+    if (heroButtonHref !== undefined) btn.setAttribute("href", heroButtonHref);
+    if (heroButtonLabel !== undefined) btn.innerHTML = heroButtonLabel;
+}
+
 function syncHeroFromSlide(slideElement) {
     if (!slideElement || !slideElement.dataset) return;
     const { heroHeading, heroSubhtml } = slideElement.dataset;
@@ -34,12 +43,16 @@ function syncHeroFromSlide(slideElement) {
         document.getElementById("heroCarouselSub")
     );
 
+    syncHeroButton(slideElement);
     syncHeroPreviewStripImg(slideElement);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     const firstSlide = document.querySelector("#carouselContainer1 .carouselSlide");
-    if (firstSlide) syncHeroPreviewStripImg(firstSlide);
+    if (firstSlide) {
+        syncHeroPreviewStripImg(firstSlide);
+        syncHeroButton(firstSlide);
+    }
 });
 
 function syncHeroWithTransition(slideElement) {
