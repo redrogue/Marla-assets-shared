@@ -2,7 +2,9 @@
 console.log("scrollspy.js loaded successfully");
 
     document.addEventListener('DOMContentLoaded', function () {
-        const scrollSpyNavLinks = document.querySelectorAll('#scrollSpyNav-1 a[href^="#"]');
+        const scrollSpyNavLinks = document.querySelectorAll(
+            '#scrollSpyNav-1 a[href^="#"]'
+        );
         if (!scrollSpyNavLinks.length) return;
 
         // Industries page: scroll-scrub timing is driven by #industries-scroll-root; nav is handled in industries-scroll-animations.js.
@@ -16,10 +18,65 @@ console.log("scrollspy.js loaded successfully");
         const fallback = document.querySelectorAll('[id^="scrollSpyContent-"]');
         const scrollSpySections = hrefSections.length ? hrefSections : [...fallback];
 
-        let clickActive = false; // Flag to indicate active class set by click
-        let scrollTimeout; // Timeout variable for debouncing
+        let clickActive = false;
+        let clickUnlockTimer = 0;
+        let ticking = false;
+        let lastActiveId = '';
 
-        scrollSpyNavLinks.forEach(link => {
+        function setActiveLink(link) {
+            const nextId = link ? (link.getAttribute('href') || '').slice(1) : '';
+            if (nextId === lastActiveId) return;
+            lastActiveId = nextId;
+            scrollSpyNavLinks.forEach((lnk) => {
+                lnk.classList.toggle('scrollSpyActive', lnk === link);
+            });
+        }
+
+        function centerChipInTrack(link) {
+            if (!link) return;
+            const track =
+                link.closest('.pill-morph-track') ||
+                link.closest('#scrollSpyNav-1') ||
+                link.closest('[data-scrollspy-nav]');
+            if (!track || track.scrollWidth <= track.clientWidth + 1) return;
+            const linkRect = link.getBoundingClientRect();
+            const trackRect = track.getBoundingClientRect();
+            const clipped =
+                linkRect.left < trackRect.left + 8 ||
+                linkRect.right > trackRect.right - 8;
+            if (!clipped) return;
+            const nextLeft =
+                track.scrollLeft +
+                (linkRect.left - trackRect.left) -
+                trackRect.width / 2 +
+                linkRect.width / 2;
+            track.scrollTo({ left: Math.max(0, nextLeft), behavior: 'auto' });
+        }
+
+        function syncFromScroll() {
+            if (clickActive) return;
+
+            let currentSectionId = '';
+            let minDistance = Infinity;
+
+            for (const section of scrollSpySections) {
+                const distance = Math.abs(section.getBoundingClientRect().top);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    currentSectionId = section.id;
+                }
+            }
+
+            if (!currentSectionId || currentSectionId === lastActiveId) return;
+
+            const activeLink = [...scrollSpyNavLinks].find(
+                (l) => l.getAttribute('href') === '#' + currentSectionId
+            );
+            setActiveLink(activeLink || null);
+            centerChipInTrack(activeLink);
+        }
+
+        scrollSpyNavLinks.forEach((link) => {
             link.addEventListener('click', function (e) {
                 e.preventDefault();
                 const targetId = this.getAttribute('href');
@@ -27,59 +84,27 @@ console.log("scrollspy.js loaded successfully");
 
                 if (targetSection) {
                     targetSection.scrollIntoView({ behavior: 'smooth' });
-
-                    // Update active class immediately
-                    scrollSpyNavLinks.forEach(lnk => lnk.classList.remove('scrollSpyActive'));
-                    this.classList.add('scrollSpyActive');
-                    clickActive = true; // Set flag
-
-                    // Clear flag after a delay (e.g., 2 seconds)
-                    setTimeout(() => {
-                        clickActive = false; // This should be false to re-enable scroll-based updates
-                    }, 2000);
+                    setActiveLink(this);
+                    centerChipInTrack(this);
+                    clickActive = true;
+                    clearTimeout(clickUnlockTimer);
+                    clickUnlockTimer = setTimeout(() => {
+                        clickActive = false;
+                    }, 800);
                 }
             });
         });
 
-        function onScroll() {
-            // Exit if the active class was recently set by a click
-            if (clickActive) return;
-
-            let currentSectionId = '';
-            let minDistance = Infinity;
-
-            scrollSpySections.forEach(section => {
-                const sectionTop = section.getBoundingClientRect().top;
-                const distance = Math.abs(sectionTop);
-
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    currentSectionId = section.getAttribute('id');
-                }
-            });
-
-            // Set the active class for the navigation links
-            scrollSpyNavLinks.forEach(link => {
-                if (link.getAttribute('href') === '#' + currentSectionId) {
-                    link.classList.add('scrollSpyActive');
-                } else {
-                    link.classList.remove('scrollSpyActive');
-                }
-            });
-
-            // Debounce the scrollIntoView for the navigation link
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                const activeLink = document.querySelector('.scrollSpyActive');
-                if (activeLink) {
-                    activeLink.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'nearest',
-                        inline: 'center' // Ensures it centers in the horizontal scrolling container
-                    });
-                }
-            }, 500); // Trigger scrollIntoView after 500ms of inactivity
-        }
-
-        document.addEventListener('scroll', onScroll);
+        window.addEventListener(
+            'scroll',
+            () => {
+                if (clickActive || ticking) return;
+                ticking = true;
+                requestAnimationFrame(() => {
+                    ticking = false;
+                    syncFromScroll();
+                });
+            },
+            { passive: true }
+        );
     });

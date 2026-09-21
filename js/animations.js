@@ -139,20 +139,22 @@ document.addEventListener("DOMContentLoaded", function () {
         updateAnimations();
     }
 
-    let ticking = false;
-    window.addEventListener(
-        "scroll",
-        () => {
-            if (!ticking) {
-                requestAnimationFrame(() => {
-                    updateAnimations();
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        },
-        { passive: true }
-    );
+    if (animations.length) {
+        let ticking = false;
+        window.addEventListener(
+            "scroll",
+            () => {
+                if (!ticking) {
+                    requestAnimationFrame(() => {
+                        updateAnimations();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            },
+            { passive: true }
+        );
+    }
 
     function triggerAnimationsOnLoad() {
         animations.forEach(({ element, animation }) => {
