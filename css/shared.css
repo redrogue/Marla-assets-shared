@@ -401,19 +401,22 @@ dialog.modalWindow::backdrop {
   }
 }
 
-/* Hero copy: crossfade + slight vertical motion on carousel-driven updates */
-.hero-carousel-text-wrap {
+/* Hero copy and image: crossfade + slight vertical motion on carousel-driven updates */
+.hero-carousel-text-wrap,
+.hero-carousel-image {
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.32s ease, transform 0.32s ease;
 }
 
-.hero-carousel-text-wrap.is-hero-text-exiting {
+.hero-carousel-text-wrap.is-hero-text-exiting,
+.hero-carousel-image.is-hero-text-exiting {
   opacity: 0;
   transform: translateY(0.5rem);
 }
 
-.hero-carousel-text-wrap.is-hero-text-enter-start {
+.hero-carousel-text-wrap.is-hero-text-enter-start,
+.hero-carousel-image.is-hero-text-enter-start {
   opacity: 0;
   transform: translateY(-0.45rem);
   transition: none;
@@ -422,7 +425,10 @@ dialog.modalWindow::backdrop {
 @media (prefers-reduced-motion: reduce) {
   .hero-carousel-text-wrap,
   .hero-carousel-text-wrap.is-hero-text-exiting,
-  .hero-carousel-text-wrap.is-hero-text-enter-start {
+  .hero-carousel-text-wrap.is-hero-text-enter-start,
+  .hero-carousel-image,
+  .hero-carousel-image.is-hero-text-exiting,
+  .hero-carousel-image.is-hero-text-enter-start {
     transition: none !important;
     transform: none !important;
   }

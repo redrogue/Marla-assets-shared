@@ -55,8 +55,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+function heroPreviewImg() {
+    return document.getElementById("heroPreviewStripImg");
+}
+
 function syncHeroWithTransition(slideElement) {
     const wrap = document.getElementById(HERO_TEXT_WRAP_ID);
+    const img = heroPreviewImg();
 
     if (!wrap || prefersReducedMotion()) {
         syncHeroFromSlide(slideElement);
@@ -71,17 +76,22 @@ function syncHeroWithTransition(slideElement) {
         if (myGen !== heroTextTransitionGen) return;
         syncHeroFromSlide(slideElement);
         wrap.classList.remove("is-hero-text-exiting");
+        img?.classList.remove("is-hero-text-exiting");
         wrap.classList.add("is-hero-text-enter-start");
+        img?.classList.add("is-hero-text-enter-start");
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 if (myGen !== heroTextTransitionGen) return;
                 wrap.classList.remove("is-hero-text-enter-start");
+                img?.classList.remove("is-hero-text-enter-start");
             });
         });
     };
 
     wrap.classList.remove("is-hero-text-enter-start");
+    img?.classList.remove("is-hero-text-enter-start");
     wrap.classList.add("is-hero-text-exiting");
+    img?.classList.add("is-hero-text-exiting");
     wrap.addEventListener("transitionend", finishExit);
 }
 
