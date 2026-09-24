@@ -116,11 +116,18 @@
 
 
   .cust_path-panel{
-      @apply bg-slate-100 hover:bg-slate-200 rounded-md flex flex-col lg:flex-row w-80 cursor-pointer;
+      @apply min-w-0 bg-slate-100 hover:bg-slate-200 rounded-md flex flex-col items-center lg:flex-row lg:items-center w-full lg:w-80 cursor-pointer;
+  }
+
+  .slideGroup2Controls > .cust_path-panel:last-child:nth-child(odd),
+  .slideGroup3Controls > .cust_path-panel:last-child:nth-child(odd) {
+      @apply col-span-2 w-1/2 justify-self-center
+        sm:col-span-1 sm:w-full sm:justify-self-stretch
+        lg:col-auto lg:w-80 lg:justify-self-auto;
   }
           
       .cust_path-panel-icon {
-          @apply w-full lg:w-2/12 px-20 pt-4 lg:p-2 items-center m-auto;
+          @apply flex w-full shrink-0 justify-center px-4 pt-4 lg:w-2/12 lg:px-2 lg:py-2;
       }
 
           .cust_path-panel-icon svg{
@@ -129,7 +136,7 @@
           }
 
       .cust_path-panel-text {
-          @apply w-full lg:w-9/12 p-2 py-4 text-base text-gray-800 text-center lg:text-left ;
+          @apply min-w-0 w-full lg:w-9/12 px-3 pt-2 pb-4 text-base text-gray-800 text-center lg:px-2 lg:py-4 lg:text-left;
       }
 
       .cust_path-panel-arrow {
