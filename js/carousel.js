@@ -25,6 +25,7 @@ class Carousel {
         this.showSlides(this.slideIndex, { emitSlideChange: false });
         this.startSlideShow();
         this.addEventListeners();
+        this.addDragListeners();
     }
 
     setUpDashes() {
@@ -117,6 +118,47 @@ class Carousel {
             if (e.offsetX < containerWidth * 0.1) this.plusSlides(-1);
             else if (e.offsetX > containerWidth * 0.9) this.plusSlides(1);
         });
+    }
+
+    addDragListeners() {
+        const el = this.carouselElement;
+        el.style.touchAction = "pan-y";
+        for (const node of el.querySelectorAll(".carouselSlide, img")) node.style.touchAction = "pan-y";
+        let pointerId = null;
+        let startX = 0;
+        let startY = 0;
+        let dragged = false;
+
+        el.addEventListener("pointerdown", (e) => {
+            if (pointerId !== null) return;
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+            pointerId = e.pointerId;
+            startX = e.clientX;
+            startY = e.clientY;
+            dragged = false;
+            try { el.setPointerCapture(e.pointerId); } catch (_) {}
+        });
+
+        el.addEventListener("pointerup", (e) => {
+            if (pointerId !== e.pointerId) return;
+            pointerId = null;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (Math.abs(dx) < 48 || Math.abs(dx) <= Math.abs(dy)) return;
+            dragged = true;
+            this.plusSlides(dx < 0 ? 1 : -1);
+        });
+
+        el.addEventListener("pointercancel", (e) => {
+            if (pointerId === e.pointerId) pointerId = null;
+        });
+
+        el.addEventListener("click", (e) => {
+            if (!dragged) return;
+            dragged = false;
+            e.preventDefault();
+            e.stopPropagation();
+        }, true);
     }
 }
 
