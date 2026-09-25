@@ -443,6 +443,7 @@ dialog.modalWindow::backdrop {
 
 .customer-logos-marquee {
   overflow: hidden;
+  touch-action: pan-y;
   -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
   mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
 }
@@ -453,8 +454,10 @@ dialog.modalWindow::backdrop {
   animation: customer-logos-marquee 28s linear infinite;
 }
 
-.customer-logos-marquee:hover .customer-logos-marquee__track {
-  animation-play-state: paused;
+@media (hover: hover) and (pointer: fine) {
+  .customer-logos-marquee:hover .customer-logos-marquee__track {
+    animation-play-state: paused;
+  }
 }
 
 .customer-logos-marquee__group {
