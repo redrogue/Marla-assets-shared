@@ -62,6 +62,14 @@ function setupContactForm(modal, options) {
   const contactBranchName = modal.querySelector("#contactBranchName");
   const emailOutput = modal.querySelector("#emailOutput");
   const phoneOutput = modal.querySelector("#phoneOutput");
+  const phoneOutputBlock = modal.querySelector("#phoneOutputBlock");
+
+  /** General enquiries have no branch number, so the label and value stay hidden. */
+  const setBranchPhone = (branch, branchKey) => {
+    const show = Boolean(branch?.phone) && branchKey !== "general";
+    if (phoneOutputBlock) phoneOutputBlock.classList.toggle("hidden", !show);
+    if (phoneOutput) phoneOutput.textContent = show ? `${branch.phone}` : "";
+  };
   const branchContainer = modal.querySelector("#branchOptions");
   const branchTemplate = modal.querySelector("#branchOptionTemplate");
   const formWrapper = modal.querySelector("#formWrapper");
@@ -125,7 +133,7 @@ function setupContactForm(modal, options) {
         emailOutput.textContent = "";
       }
     }
-    if (phoneOutput) phoneOutput.textContent = "";
+    setBranchPhone(null);
     
     // Reset form name
     setFormName("[DYNAMIC - SET BY JAVASCRIPT]");
@@ -194,7 +202,7 @@ function setupContactForm(modal, options) {
           emailOutput.textContent = `${branch.email}`;
         }
       }
-      if (phoneOutput) phoneOutput.textContent = `${branch.phone}`;
+      setBranchPhone(branch, branchKey);
       // Set hidden subject from branch data (for email subject line)
       setSubject(branch.subject || `${branch.label} Enquiry`);
       // Title: use branch title when link passed generic/no title, else keep link title
@@ -225,7 +233,7 @@ function setupContactForm(modal, options) {
         emailOutput.textContent = `${b.email}`;
       }
     }
-    if (phoneOutput) phoneOutput.textContent = `${b.phone}`;
+    setBranchPhone(b, options.preselectedBranch);
     // Set hidden subject from branch data (for email subject line)
     setSubject(b.subject || `${b.label} Enquiry`);
     // Title: use branch title when link passed generic/no title, else keep link title
@@ -270,7 +278,7 @@ function setupContactForm(modal, options) {
           emailOutput.textContent = "";
         }
       }
-      if (phoneOutput) phoneOutput.textContent = "";
+      setBranchPhone(null);
       if (thankYouPanel) thankYouPanel.classList.add("hidden");
       if (titleField) titleField.value = "";
     });
