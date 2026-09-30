@@ -199,12 +199,36 @@ document.addEventListener("DOMContentLoaded", function () {
         ) {
             return { translateX: [130, 0], opacity: [0, 1], duration: 500 };
         }
-        if (element.classList.contains('animeSlideLeft')) return { translateX: [-130, 0], opacity: [0, 1], duration: 500 };
-        if (element.classList.contains('animeSlideLeftx2')) return { translateX: [265, 0], opacity: [0, 1], duration: 500 };
-        if (element.classList.contains('animeSlideRight')) return { translateX: [130, 0], opacity: [0, 1], duration: 500 };
-        if (element.classList.contains('animeSlideRightx2')) return { translateX: [265, 0], opacity: [0, 1], duration: 500 };
-        if (element.classList.contains('animeSlideDown')) return { translateY: [-130, 0], opacity: [0, 1], duration: 500 };
-        if (element.classList.contains('animeSlideUp')) return { translateY: [130, 0], opacity: [0, 1], duration: 500 };
+        if (element.classList.contains('animeSlideLeft')) {
+            const motion = { translateX: [-130, 0], duration: 500 };
+            if (!element.classList.contains('animeSlideNoFade')) motion.opacity = [0, 1];
+            return motion;
+        }
+        if (element.classList.contains('animeSlideLeftx2')) {
+            const motion = { translateX: [265, 0], duration: 500 };
+            if (!element.classList.contains('animeSlideNoFade')) motion.opacity = [0, 1];
+            return motion;
+        }
+        if (element.classList.contains('animeSlideRight')) {
+            const motion = { translateX: [130, 0], duration: 500 };
+            if (!element.classList.contains('animeSlideNoFade')) motion.opacity = [0, 1];
+            return motion;
+        }
+        if (element.classList.contains('animeSlideRightx2')) {
+            const motion = { translateX: [265, 0], duration: 500 };
+            if (!element.classList.contains('animeSlideNoFade')) motion.opacity = [0, 1];
+            return motion;
+        }
+        if (element.classList.contains('animeSlideDown')) {
+            const motion = { translateY: [-130, 0], duration: 500 };
+            if (!element.classList.contains('animeSlideNoFade')) motion.opacity = [0, 1];
+            return motion;
+        }
+        if (element.classList.contains('animeSlideUp')) {
+            const motion = { translateY: [130, 0], duration: 500 };
+            if (!element.classList.contains('animeSlideNoFade')) motion.opacity = [0, 1];
+            return motion;
+        }
         return {};
     }
 });
